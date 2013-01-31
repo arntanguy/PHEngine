@@ -1,0 +1,10 @@
+CMakeCache.txt
+CMakeFiles/
+*.swp
+*.swo
+bin/
+doc/
+tags
+cmake_install.cmake
+Makefile
+libPHEngine.*
