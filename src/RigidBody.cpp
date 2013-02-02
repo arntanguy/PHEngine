@@ -21,6 +21,7 @@
 #include <GL/gl.h>
 #include "Debug.h"
 #include "AABoundingBox.h"
+#include <glm/ext.hpp>
 
 RigidBody::RigidBody()
 {
@@ -43,40 +44,30 @@ void RigidBody::init()
     setAngularVelocity(glm::vec3(0.f, 0.f, 0.f), 0.f);
     mLinearMomentum = glm::vec3(0.f, 0.f, 0.f);
     setAngularVelocity(glm::vec3(0.f, 0.f, 0.f), 0.f);
+
+    AABoundingBox *aabb = new AABoundingBox();
+    mBoundingBox = new AABoundingBox();
 }
 
-void RigidBody::AABB(const std::string& nodeName)
+void RigidBody::AABB()
 {
-    AssimpMeshEntity *e = 0;
-    e = dynamic_cast<AssimpMeshEntity*>(mEntity);
-    if(e != 0) {
-        dinf << "Entity type is supported by the physics engine." << std::endl;
-        AABB(e, nodeName);
-    } else {
-        derr << "Entity type is unsupported by the physics engine." << std::endl;
-    }
-}
-
-void RigidBody::AABB(AssimpMeshEntity *entity, const std::string &nodeName)
-{
-    MeshData *data = entity->toMeshData(nodeName);
-    dinf << "Printing data..." << std::endl;
     glm::vec3 min, max;
-    std::vector<glm::vec3>::iterator it = data->mVertices.begin();
-    for(; it != data->mVertices.end(); it++)
+    std::vector<glm::vec3>::iterator it = mMeshData->mVertices.begin();
+    for(; it != mMeshData->mVertices.end(); it++)
     {
-        min.x = glm::min(min.x, it->x);
-        min.y = glm::min(min.y, it->y);
-        min.z = glm::min(min.z, it->z);
-        max.x = glm::max(max.x, it->x);
-        max.y = glm::max(max.y, it->y);
-        max.z = glm::max(max.z, it->z);
-        //dinf << "V: " << it->x << " " << it->y << " " << it->z << std::endl;
+        glm::vec4 transformed = mRotation * glm::vec4(*it, 1);
+        min.x = glm::min(min.x, transformed.x);
+        min.y = glm::min(min.y, transformed.y);
+        min.z = glm::min(min.z, transformed.z);
+        max.x = glm::max(max.x, transformed.x);
+        max.y = glm::max(max.y, transformed.y);
+        max.z = glm::max(max.z, transformed.z);
     }
-    dinf << "Min: " << min.x << " " << min.y << " " << min.z << std::endl;
-    dinf << "Max: " << max.x << " " << max.y << " " << max.z << std::endl;
-    AABoundingBox *aabb = new AABoundingBox(min, max);
-    mBoundingBox = aabb;
+    //dinf << "Min: " << min.x << " " << min.y << " " << min.z << std::endl;
+    //dinf << "Max: " << max.x << " " << max.y << " " << max.z << std::endl;
+    AABoundingBox *aabb = dynamic_cast<AABoundingBox *>(mBoundingBox);
+    if(aabb != 0)
+        aabb->update(mPosition, min, max);
 }
 
 RigidBody::~RigidBody()
@@ -89,6 +80,19 @@ RigidBody::~RigidBody()
 void RigidBody::update(float ellapsedTime)
 {
     mPosition = mPosition + mLinearMomentum/mMass * ellapsedTime;
+    if(mAngularVelocity  != glm::vec3(0., 0., 0.) ) {
+        mRotation *= rotationMatrix(mAngularVelocity, glm::length2(mAngularVelocity));
+    } else {
+        mRotation = glm::mat4(1.0f);
+    }
+    mTransformation = glm::mat4(1.f);
+    glm::mat4 translation = glm::translate(mPosition.x, mPosition.y, mPosition.z);
+
+    // Transformation = rotation followed by translation
+    mTransformation *= glm::translate(mPosition.x, mPosition.y, mPosition.z) * mRotation ;
+
+    // XXX: don't recompute full bounding box everytime
+    AABB();
 }
 
 glm::mat4 RigidBody::rotationMatrix(glm::vec3 axis, float angle)
@@ -107,23 +111,15 @@ void RigidBody::render(float ellapsedTime)
 {
     update(ellapsedTime);
 
-    glm::mat4 transformation;
-    if(mAngularVelocity  != glm::vec3(0., 0., 0.) ) {
-        mRotation *= rotationMatrix(mAngularVelocity, glm::length2(mAngularVelocity));
-    } else {
-        mRotation = glm::mat4(1.0f);
-    }
-    glm::mat4 translation = glm::translate(mPosition.x, mPosition.y, mPosition.z);
-
-    transformation *= translation * mRotation ;
-
     // Build GL Matrix from glm mat4
     GLfloat *mat;
-    mat = glm::value_ptr(transformation);
-    // Multiply current stack by matrix
-    glMultMatrixf(mat);
+    mat = glm::value_ptr(mTransformation);
+    glPushMatrix();
+        // Multiply current stack by matrix
+        glMultMatrixf(mat);
+        mEntity->render();
+    glPopMatrix();
 
-    mEntity->render();
     mBoundingBox->render();
 }
 
@@ -150,6 +146,10 @@ void RigidBody::rotate(const glm::vec3& angularVelocity)
 
 void RigidBody::setEntity(Entity *entity) {
     mEntity = entity;
-    // XXX: don't do it automatically
-    AABB("bear");
+    AssimpMeshEntity *e = 0;
+    e = dynamic_cast<AssimpMeshEntity *>(entity);
+    if(e != 0)
+        mMeshData = e->toMeshData("bear");
+        // XXX: don't do it automatically
+        AABB();
 }

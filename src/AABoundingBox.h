@@ -38,6 +38,8 @@ class AABoundingBox : public BoundingBox
         AABoundingBox(const glm::vec3& min, const glm::vec3& max);
         ~AABoundingBox();
 
+        void update(const glm::vec3& center, const glm::vec3& min, const glm::vec3& max);
+
         bool render();
 };
 

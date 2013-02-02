@@ -16,45 +16,30 @@
 * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 *
  ******************************************************************************/
 
-#include "AABoundingBox.h"
+#ifndef __PhysicsWorld__
+#define __PhysicsWorld__
 
-AABoundingBox::AABoundingBox() : BoundingBox()
+#include <vector>
+
+class RigidBody;
+
+class PhysicsWorld
 {
-    init(glm::vec3(), glm::vec3());
-}
+    private:
+        // Active rigid bodies
+        std::vector<RigidBody *> mRigidBodies;
 
-AABoundingBox::AABoundingBox(const glm::vec3& min, const glm::vec3& max)
-{
-    init(min, max);
-}
+    public:
+        PhysicsWorld();
+        ~PhysicsWorld();
 
-void AABoundingBox::init(const glm::vec3& min, const glm::vec3& max)
-{
-    update(glm::vec3(0,0,0), min, max);
-}
+        void addRigidBody(RigidBody *rigidBody);
 
-AABoundingBox::~AABoundingBox()
-{
-}
+        void broadPhase();
 
-void AABoundingBox::update(const glm::vec3 &center, const glm::vec3& min, const glm::vec3& max)
-{
-    mCenter = center + 0.5f * (min + max);
-    mSize = max - min;
-    mEntity = new ParallelogramEntity(mCenter, mSize);
-    mEntity->generate();
-}
 
-bool AABoundingBox::render()
-{
-    // Save all the states, so that it can be restored later.
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
+        void renderAllRigidBodies(float timestep);
+};
 
-    // Render in wireframe
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
-    mEntity->render();
-
-    glPopAttrib();
-    return true;
-}
+#endif
