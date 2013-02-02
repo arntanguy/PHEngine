@@ -57,6 +57,7 @@ void RigidBody::init()
 
 void RigidBody::AABB()
 {
+    if(mMeshData != 0) {
     glm::vec3 min, max;
     std::vector<glm::vec3>::iterator it = mMeshData->mVertices.begin();
     for(; it != mMeshData->mVertices.end(); it++)
@@ -74,6 +75,9 @@ void RigidBody::AABB()
     AABoundingBox *aabb = dynamic_cast<AABoundingBox *>(mBoundingBox);
     if(aabb != 0)
         aabb->update(mPosition, min, max);
+    } else {
+        derr << "Error setting up AABB: No mesh data! Please call setEntity() first!" << std::endl;
+    }
 }
 
 RigidBody::~RigidBody()
@@ -97,7 +101,7 @@ void RigidBody::update(float ellapsedTime)
     // Transformation = rotation followed by translation
     mTransformation *= glm::translate(mPosition.x, mPosition.y, mPosition.z) * mRotation ;
 
-    // XXX: don't recompute full bounding box everytime
+    // XXX: don't recompute full bounding box everytime, use an approximation
     AABB();
 }
 
@@ -133,7 +137,7 @@ void RigidBody::render(float ellapsedTime)
 void RigidBody::setAngularVelocity(const glm::vec3& direction, float magnitude)
 {
     mAngularVelocity = glm::normalize(direction) * magnitude;
-    mAngularVelocityNorm = 0;
+    mAngularVelocityNorm = magnitude;
 }
 
 void RigidBody::setLinearMomentum(const glm::vec3 &linearMomentum)
@@ -158,8 +162,8 @@ void RigidBody::setEntity(Entity *entity) {
     e = dynamic_cast<AssimpMeshEntity *>(entity);
     if(e != 0)
         mMeshData = e->toMeshData("bear");
-        // XXX: don't do it automatically
-        AABB();
+    // XXX: don't call aabb automatically like that
+    AABB();
 }
 
 BoundingBox* RigidBody::getBoundingBox()
@@ -170,7 +174,7 @@ BoundingBox* RigidBody::getBoundingBox()
 void RigidBody::setPosition(const glm::vec3 & position)
 {
     mPosition = position;
-    // XXX
+    // XXX: Find better way to update AABB
     AABB();
 }
 void RigidBody::setCollide(bool collide)

@@ -35,8 +35,9 @@ class RigidBody {
         void update(float ellapsedTime);
         glm::mat4 rotationMatrix(glm::vec3 axis, float angle);
 
-        // Rotation matrix must be set correctly
+        // Rotation matrix mRotation must be set correctly
         void AABB();
+
 
     public:
         RigidBody();

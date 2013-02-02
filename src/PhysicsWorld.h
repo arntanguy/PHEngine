@@ -21,97 +21,142 @@
 
 #include <vector>
 #include <set>
-#include <vector>
-#include <list>
 #include <unordered_map>
 #include <unordered_set>
 #include <glm/glm.hpp>
-#include <iostream>
 #include "RigidBody.h"
 
 
+/**
+ * @brief Holds information used to compare two AABB
+ * In effect, this will be the min and max value of the AABB along the considered axis
+ */
 struct AABBComp
 {
     float min, max;
     RigidBody *rigidBody;
-    AABBComp() {
-    }
+
+    AABBComp() { }
     AABBComp(RigidBody *rigidBody, float min, float max) {
         this->min = min;
         this->max = max;
         this->rigidBody = rigidBody;
     }
+    /**
+     * @brief Operator used by std containers (multiset) to sort the items
+     *
+     * @param v1 AABB comparison information of rigid body 1
+     * @param v2 AABB comparison information of rigid body 2
+     *
+     * @return
+     *  true when min(object1) < min(object2)
+     */
     bool operator()(AABBComp v1, AABBComp v2)
     {
         return v1.min < v2.min;
     }
 };
 
-// a predicate implemented as a class:
-struct MaxPredicate{
+/**
+ * @brief A predicate for removing items from the active list of AABB
+ * Used to perform BroadPhase
+ */
+struct RemoveFromActiveList{
   float min;
-  MaxPredicate(float min) { this->min = min; }
+  /**
+   * @brief Predicate returning true for every item that has to be removed from active list.
+   * This happens when the maximum value of the AABB along considered axis is smaller than the minimal value of the current AABB.
+   * -----A----
+   *      -----B-----
+   *               -----Current-----
+   * In this example case, A will be removed because A.max < Current.min
+   *
+   * @param min
+   *    The minimal value of the current bounding box
+   */
+  RemoveFromActiveList(float min) { this->min = min; }
   bool operator() (const AABBComp& v) { return v.max < min; }
-  //bool operator() (const AABBComp& v) { return true; }
 };
 
+/**
+ * @brief Holds information about which axis the two AABB are
+ * colliding.
+ */
 struct AxisCollide
 {
     // Number of axis on which the collision occurs
     bool axis[3];
+    AxisCollide() {
+        axis[0] = false;
+        axis[1] = false;
+        axis[2] = false;
+    }
     void setCollideOnAxis(short a) {
         if(a < 3)
             axis[a] = true;
     }
-    // When collision is on all axis simultaneously, then the two object are in collision
-    // (
+    /**
+     * @brief Checks whether the AABB of the two objects are colliding
+     * This happens when the objects are colliding along all 3 axis at the same time
+     *
+     * @return
+     *  true in case of collision
+     */
     bool collide() {
         return axis[0] && axis[1] && axis[2];
     }
 };
 
-struct CollidingPair
+/**
+ * @brief Represent a pair of rigid bodies.
+ * Operator == is overridden so that the order of the bodies doesn't matter, meaning (A,B)=(B,A)
+ */
+struct RigidBodyPair
 {
     RigidBody *rigidBody1;
     RigidBody *rigidBody2;
-    CollidingPair(RigidBody *r1, RigidBody *r2) {
+
+    RigidBodyPair(RigidBody *r1, RigidBody *r2) {
         rigidBody1 = r1;
         rigidBody2 = r2;
     }
 
-    bool operator==(const CollidingPair &c) const
+    bool operator==(const RigidBodyPair &c) const
     {
-       // std::cout << "call == operator" << std::endl;
-       // std::cout << "Checking " << rigidBody1->getId() <<"=="<<c.rigidBody1->getId()
-       //     << " && " << rigidBody2->getId() << " == " << c.rigidBody2->getId() << std::endl;
         return ((rigidBody1 == c.rigidBody1) && (rigidBody2 == c.rigidBody2))  ||
             ((rigidBody2 == c.rigidBody1) && (rigidBody1 == c.rigidBody2)) ;
     }
 };
 
-/**
- * Provide hash function for CollidingPair type.
- * See http://marknelson.us/2011/09/03/hash-functions-for-c-unordered-containers/
- * for details
- **/
 namespace std {
+    /**
+     * @brief
+     * Provide hash function for RigidBodyPair type.
+     * See http://marknelson.us/2011/09/03/hash-functions-for-c-unordered-containers/
+     * for details
+     **/
     template <>
-        class hash<CollidingPair>{
-        public :
-            size_t operator()(const CollidingPair &c ) const
-            {
-                return std::hash<int>()(c.rigidBody1->getId()) + std::hash<int>()(c.rigidBody2->getId());
-            }
-    };
+        class hash<RigidBodyPair>{
+            public :
+                size_t operator()(const RigidBodyPair &c ) const
+                {
+                    return std::hash<int>()(c.rigidBody1->getId()) + std::hash<int>()(c.rigidBody2->getId());
+                }
+        };
 };
 
+/**
+ * @brief Manages the physic world pipeline
+ * Register rigid bodies to this class to manage the physic simulation
+ * Steps:
+ * - Apply BroadPhase collision detection
+ */
 class PhysicsWorld
 {
     private:
         // Active rigid bodies
         std::vector<RigidBody *> mRigidBodies;
-        std::unordered_map<CollidingPair, AxisCollide> collidingPairs;
-        //BroadPhaseCollision *mBroadphase;
+        std::unordered_map<RigidBodyPair, AxisCollide> mCollidingPairs;
 
     public:
         PhysicsWorld();
