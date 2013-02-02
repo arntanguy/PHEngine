@@ -23,10 +23,13 @@
 
 class BoundingBox
 {
+    protected:
+        bool mCollide;
+
     public:
         BoundingBox();
         ~BoundingBox();
-        virtual bool render() = 0;
+        virtual bool render(bool collide) = 0;
 };
 
 #endif

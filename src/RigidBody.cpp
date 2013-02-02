@@ -23,6 +23,8 @@
 #include "AABoundingBox.h"
 #include <glm/ext.hpp>
 
+int RigidBody::id_counter = 0;
+
 RigidBody::RigidBody()
 {
     init();
@@ -36,14 +38,18 @@ RigidBody::RigidBody(Entity *mEntity, const float mass) : mMass(mass)
 
 void RigidBody::init()
 {
+    id = id_counter++;
     mRotation = glm::mat4(1.f);
     mMass = 1.;
     //mLinearMomentum = glm::vec3(0.01, 0.01, 0.);
     mPosition = glm::vec3(0.f,0.f,0.f);
     mLinearMomentum = glm::vec3(0.f);
     setAngularVelocity(glm::vec3(0.f, 0.f, 0.f), 0.f);
+    mAngularVelocityNorm = 0;
     mLinearMomentum = glm::vec3(0.f, 0.f, 0.f);
     setAngularVelocity(glm::vec3(0.f, 0.f, 0.f), 0.f);
+
+    setCollide(false);
 
     AABoundingBox *aabb = new AABoundingBox();
     mBoundingBox = new AABoundingBox();
@@ -80,7 +86,7 @@ RigidBody::~RigidBody()
 void RigidBody::update(float ellapsedTime)
 {
     mPosition = mPosition + mLinearMomentum/mMass * ellapsedTime;
-    if(mAngularVelocity  != glm::vec3(0., 0., 0.) ) {
+    if(mAngularVelocityNorm != 0) {
         mRotation *= rotationMatrix(mAngularVelocity, glm::length2(mAngularVelocity));
     } else {
         mRotation = glm::mat4(1.0f);
@@ -120,13 +126,14 @@ void RigidBody::render(float ellapsedTime)
         mEntity->render();
     glPopMatrix();
 
-    mBoundingBox->render();
+    mBoundingBox->render(mCollide);
 }
 
 
 void RigidBody::setAngularVelocity(const glm::vec3& direction, float magnitude)
 {
     mAngularVelocity = glm::normalize(direction) * magnitude;
+    mAngularVelocityNorm = 0;
 }
 
 void RigidBody::setLinearMomentum(const glm::vec3 &linearMomentum)
@@ -141,7 +148,8 @@ void RigidBody::translate(const glm::vec3& translation)
 
 void RigidBody::rotate(const glm::vec3& angularVelocity)
 {
-    mRotation *= rotationMatrix(angularVelocity, glm::length2(angularVelocity));
+    mAngularVelocityNorm = glm::length2(angularVelocity);
+    mRotation *= rotationMatrix(angularVelocity, mAngularVelocityNorm);
 }
 
 void RigidBody::setEntity(Entity *entity) {
@@ -152,4 +160,20 @@ void RigidBody::setEntity(Entity *entity) {
         mMeshData = e->toMeshData("bear");
         // XXX: don't do it automatically
         AABB();
+}
+
+BoundingBox* RigidBody::getBoundingBox()
+{
+    return mBoundingBox;
+}
+
+void RigidBody::setPosition(const glm::vec3 & position)
+{
+    mPosition = position;
+    // XXX
+    AABB();
+}
+void RigidBody::setCollide(bool collide)
+{
+    mCollide = collide;
 }

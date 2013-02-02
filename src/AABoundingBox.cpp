@@ -39,13 +39,15 @@ AABoundingBox::~AABoundingBox()
 
 void AABoundingBox::update(const glm::vec3 &center, const glm::vec3& min, const glm::vec3& max)
 {
-    mCenter = center + 0.5f * (min + max);
-    mSize = max - min;
+    mMin = min;
+    mMax = max;
+    mCenter = center + 0.5f * (mMin + mMax);
+    mSize = mMax - mMin;
     mEntity = new ParallelogramEntity(mCenter, mSize);
     mEntity->generate();
 }
 
-bool AABoundingBox::render()
+bool AABoundingBox::render(bool collide)
 {
     // Save all the states, so that it can be restored later.
     glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -53,6 +55,11 @@ bool AABoundingBox::render()
     // Render in wireframe
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
+    if(collide) {
+        glColor3f(1.f, 0.f, 0.f);
+    } else {
+        glColor3f(0.f, 0.f, 1.f);
+    }
     mEntity->render();
 
     glPopAttrib();

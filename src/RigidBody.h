@@ -10,11 +10,16 @@ class Entity;
 
 class RigidBody {
     private:
+        static int id_counter;
+        int id;
         float mMass;
         glm::vec3 mPosition;
         glm::mat4 mRotation;
         glm::vec3 mLinearMomentum; // P(t) = v(t)*m
         glm::vec3 mAngularVelocity; // w(t) = {wx, wy, wz}. Magnitude encodes speed of the spin
+        float mAngularVelocityNorm;
+
+        bool mCollide;
 
         glm::mat4 mTransformation; // Final transformation
 
@@ -40,11 +45,18 @@ class RigidBody {
 
         virtual void render(float ellapsedTime);
 
+        void setPosition(const glm::vec3& position);
         void setEntity(Entity *entity);
         void setAngularVelocity(const glm::vec3& direction, float magnitude);
         void setLinearMomentum(const glm::vec3 &linearMomentum);
-        void rotate(const glm::vec3& angularVelocity);
+        void rotate(const glm::vec3& mAngularVelocityNorm);
         void translate(const glm::vec3& translation);
+
+        BoundingBox *getBoundingBox() ;
+        void setCollide(bool state);
+        int getId() const {
+            return id;
+        }
 };
 
 #endif

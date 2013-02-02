@@ -28,19 +28,26 @@ class AABoundingBox : public BoundingBox
     private:
         glm::vec3 mCenter;
         glm::vec3 mSize; // Size along x, y, and z axis
-        glm::vec3 min, max;
+        glm::vec3 mMin, mMax;
         ParallelogramEntity *mEntity;
 
-        void init(const glm::vec3& min, const glm::vec3& max);
+        void init(const glm::vec3& mMin, const glm::vec3& mMax);
 
     public:
         AABoundingBox();
-        AABoundingBox(const glm::vec3& min, const glm::vec3& max);
+        AABoundingBox(const glm::vec3& mMin, const glm::vec3& mMax);
         ~AABoundingBox();
 
-        void update(const glm::vec3& center, const glm::vec3& min, const glm::vec3& max);
+        void update(const glm::vec3& center, const glm::vec3& mMin, const glm::vec3& mMax);
 
-        bool render();
+        virtual bool render(bool collide);
+
+        glm::vec3 getMin() const {
+            return mCenter+mMin;
+        }
+        glm::vec3 getMax() const {
+            return mCenter+mMax;
+        }
 };
 
 #endif
