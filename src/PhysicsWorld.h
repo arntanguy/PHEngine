@@ -39,7 +39,7 @@ class PhysicsWorld
     private:
         // Active rigid bodies
         std::vector<RigidBody *> mRigidBodies;
-        BroadPhaseCollision *mBroadPhaseCollision;
+        std::vector<BroadPhaseCollision *> mBroadPhaseCollision;
         std::unordered_map<RigidBodyPair, AxisCollide> mCollidingPairs;
 
     public:
@@ -47,7 +47,7 @@ class PhysicsWorld
         ~PhysicsWorld();
 
         void addRigidBody(RigidBody *rigidBody);
-        void setBroadPhaseCollision(BroadPhaseCollision *broadPhaseCollision);
+        void addBroadPhaseCollisionHandler(BroadPhaseCollision *broadPhaseCollision);
 
         void detectCollisions();
         void renderAllRigidBodies(float timestep);

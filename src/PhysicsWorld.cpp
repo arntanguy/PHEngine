@@ -25,7 +25,8 @@
 
 PhysicsWorld::PhysicsWorld()
 {
-    setBroadPhaseCollision(new BoundingSphereBroadPhaseCollision(this));
+    addBroadPhaseCollisionHandler(new AABBBroadPhaseCollision(this));
+    addBroadPhaseCollisionHandler(new BoundingSphereBroadPhaseCollision(this));
 }
 PhysicsWorld::~PhysicsWorld()
 {
@@ -37,17 +38,27 @@ void PhysicsWorld::addRigidBody(RigidBody *rigidBody)
         mRigidBodies.push_back(rigidBody);
 }
 
-void PhysicsWorld::setBroadPhaseCollision(BroadPhaseCollision *broadPhaseCollision)
+void PhysicsWorld::addBroadPhaseCollisionHandler(BroadPhaseCollision *broadPhaseCollision)
 {
-    mBroadPhaseCollision = broadPhaseCollision;
+    mBroadPhaseCollision.push_back(broadPhaseCollision);
 }
 
 void PhysicsWorld::detectCollisions()
 {
-    //std::unordered_map<RigidBodyPair, AxisCollide> collidingPairs = mCollidingPairs.begin();
-    if(mBroadPhaseCollision != 0) {
-        mBroadPhaseCollision->update();
-        mCollidingPairs = mBroadPhaseCollision->getCollidingPairs();
+    mCollidingPairs.clear();
+    if(mBroadPhaseCollision.size() != 0) {
+        std::unordered_map<RigidBodyPair, AxisCollide> collidingPairs;
+        std::vector<BroadPhaseCollision *>::iterator it;
+        std::unordered_map<RigidBodyPair, AxisCollide>::iterator cit;
+        for( it = mBroadPhaseCollision.begin() ; it != mBroadPhaseCollision.end(); it++ ) {
+            (*it)->update();
+
+            collidingPairs = (*it)->getCollidingPairs();
+            for( cit = collidingPairs.begin() ; cit != collidingPairs.end(); cit++ ) {
+               mCollidingPairs[cit->first] = cit->second;
+            }
+        }
+
     }
 }
 
