@@ -23,23 +23,43 @@
 #include "ParallelogramEntity.h"
 #include <glm/glm.hpp>
 
+/**
+ * @brief Provides an Axis Aligned Bounding Box
+ * This type of bounding box is always oriented by 3 main axis (x,y,z).
+ * It is thus rotation dependant. This implementation support 2 main modes:
+ * - AABB_EXACT: At each update, the most precise bounding box is recalculated. Thus, there won't ever be space between the object and the bounding box. *   This is the optimal AABB
+ *   WARNING: The algorithm calculating the best fitting bounding box has to go through all vertices, and this everytime a change of orientation is made to the object! This can be a huge computation if you have a lot of vertices.
+ * - AABB_APPROXIMATE: Computes an AABB that will fit every possible orientation of the object.
+ *   The update step is trivial, only the center position of the AABB is updated.
+ */
 class AABoundingBox : public BoundingBox
 {
+    public:
+        enum Type {AABB_EXACT, AABB_APPROXIMATE};
+
     private:
+        Type mType;
         glm::vec3 mCenter;
         glm::vec3 mSize; // Size along x, y, and z axis
         glm::vec3 mMin, mMax;
         ParallelogramEntity *mEntity;
 
-        void init(const glm::vec3& mMin, const glm::vec3& mMax);
+        void init(Type type, const glm::vec3& mMin, const glm::vec3& mMax);
 
-    public:
-        AABoundingBox();
-        AABoundingBox(const glm::vec3& mMin, const glm::vec3& mMax);
-        ~AABoundingBox();
+        void computeExactAABB();
+        void computeApproximateAABB();
 
+        void update(const glm::vec3&center);
         void update(const glm::vec3& center, const glm::vec3& mMin, const glm::vec3& mMax);
 
+    public:
+        AABoundingBox(RigidBody *parent, Type type);
+        AABoundingBox(RigidBody *parent, const glm::vec3& mMin, const glm::vec3& mMax, Type type);
+        ~AABoundingBox();
+
+
+        virtual bool computeFromMeshData();
+        virtual void update();
         virtual bool render(bool collide);
 
         glm::vec3 getMin() const {

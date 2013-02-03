@@ -20,15 +20,32 @@
 #define __BoundingBox__
 
 #include "Entity.h"
+#include <glm/glm.hpp>
 
+class MeshData;
+class RigidBody;
+
+/**
+ * @brief Abstract class representing a bounding box
+ * Defines essential virtual functions to all bounding boxes:
+ * - Generation
+ * - update (use data from parent rigid body to determine update parameters)
+ * - render (debug)
+ */
 class BoundingBox
 {
     protected:
         bool mCollide;
 
+        RigidBody *mParent;
+        MeshData *mMeshData;
+
     public:
-        BoundingBox();
+        BoundingBox(RigidBody *parent);
         ~BoundingBox();
+
+        virtual bool computeFromMeshData() = 0;
+        virtual void update() = 0;
         virtual bool render(bool collide) = 0;
 };
 

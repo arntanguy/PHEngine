@@ -22,6 +22,7 @@
 #include "Debug.h"
 #include "AABoundingBox.h"
 #include <glm/ext.hpp>
+#include "mt.h"
 
 int RigidBody::id_counter = 0;
 
@@ -49,34 +50,21 @@ void RigidBody::init()
     mLinearMomentum = glm::vec3(0.f, 0.f, 0.f);
     setAngularVelocity(glm::vec3(0.f, 0.f, 0.f), 0.f);
 
-    setCollide(false);
+    mBoundingBox = 0;
 
-    AABoundingBox *aabb = new AABoundingBox();
-    mBoundingBox = new AABoundingBox();
+    setCollide(false);
+}
+
+
+void RigidBody::AABB_Approximate()
+{
+    if(mMeshData != 0) {
+    }
 }
 
 void RigidBody::AABB()
 {
     if(mMeshData != 0) {
-    glm::vec3 min, max;
-    std::vector<glm::vec3>::iterator it = mMeshData->mVertices.begin();
-    for(; it != mMeshData->mVertices.end(); it++)
-    {
-        glm::vec4 transformed = mRotation * glm::vec4(*it, 1);
-        min.x = glm::min(min.x, transformed.x);
-        min.y = glm::min(min.y, transformed.y);
-        min.z = glm::min(min.z, transformed.z);
-        max.x = glm::max(max.x, transformed.x);
-        max.y = glm::max(max.y, transformed.y);
-        max.z = glm::max(max.z, transformed.z);
-    }
-    //dinf << "Min: " << min.x << " " << min.y << " " << min.z << std::endl;
-    //dinf << "Max: " << max.x << " " << max.y << " " << max.z << std::endl;
-    AABoundingBox *aabb = dynamic_cast<AABoundingBox *>(mBoundingBox);
-    if(aabb != 0)
-        aabb->update(mPosition, min, max);
-    } else {
-        derr << "Error setting up AABB: No mesh data! Please call setEntity() first!" << std::endl;
     }
 }
 
@@ -101,8 +89,10 @@ void RigidBody::update(float ellapsedTime)
     // Transformation = rotation followed by translation
     mTransformation *= glm::translate(mPosition.x, mPosition.y, mPosition.z) * mRotation ;
 
-    // XXX: don't recompute full bounding box everytime, use an approximation
-    AABB();
+    if(mBoundingBox != 0)
+    {
+        mBoundingBox->update();
+    }
 }
 
 glm::mat4 RigidBody::rotationMatrix(glm::vec3 axis, float angle)
@@ -130,7 +120,9 @@ void RigidBody::render(float ellapsedTime)
         mEntity->render();
     glPopMatrix();
 
+    if(mBoundingBox != 0) {
     mBoundingBox->render(mCollide);
+    }
 }
 
 
@@ -162,8 +154,26 @@ void RigidBody::setEntity(Entity *entity) {
     e = dynamic_cast<AssimpMeshEntity *>(entity);
     if(e != 0)
         mMeshData = e->toMeshData("bear");
-    // XXX: don't call aabb automatically like that
-    AABB();
+}
+
+void RigidBody::setPosition(const glm::vec3 & position)
+{
+    mPosition = position;
+}
+
+void RigidBody::setCollide(bool collide)
+{
+    mCollide = collide;
+}
+
+MeshData* RigidBody::getMeshData() const
+{
+    return mMeshData;
+}
+
+void RigidBody::setBoundingBox(BoundingBox *boundingBox)
+{
+    mBoundingBox = boundingBox;
 }
 
 BoundingBox* RigidBody::getBoundingBox()
@@ -171,13 +181,3 @@ BoundingBox* RigidBody::getBoundingBox()
     return mBoundingBox;
 }
 
-void RigidBody::setPosition(const glm::vec3 & position)
-{
-    mPosition = position;
-    // XXX: Find better way to update AABB
-    AABB();
-}
-void RigidBody::setCollide(bool collide)
-{
-    mCollide = collide;
-}

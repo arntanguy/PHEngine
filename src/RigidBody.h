@@ -5,6 +5,7 @@
 #include <glm/ext.hpp>
 #include "AssimpMeshEntity.h"
 #include "BoundingBox.h"
+#include "AABoundingBox.h"
 
 class Entity;
 
@@ -37,7 +38,7 @@ class RigidBody {
 
         // Rotation matrix mRotation must be set correctly
         void AABB();
-
+        void AABB_Approximate();
 
     public:
         RigidBody();
@@ -45,6 +46,8 @@ class RigidBody {
         ~RigidBody();
 
         virtual void render(float ellapsedTime);
+
+        void setBoundingBox(BoundingBox *boundingBox);
 
         void setPosition(const glm::vec3& position);
         void setEntity(Entity *entity);
@@ -58,6 +61,16 @@ class RigidBody {
         int getId() const {
             return id;
         }
+
+        glm::mat4 getRotation() const
+        {
+            return mRotation;
+        }
+        glm::vec3 getPosition() const
+        {
+            return mPosition;
+        }
+        MeshData *getMeshData() const;
 };
 
 #endif

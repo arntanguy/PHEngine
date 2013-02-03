@@ -34,6 +34,7 @@ ${SRC_DIR}/PhysicsWorld.cpp
 ${SRC_DIR}/RigidBody.cpp
 ${SRC_DIR}/BoundingBox.cpp
 ${SRC_DIR}/AABoundingBox.cpp
+${SRC_DIR}/mt.cpp
 )
 
 include_directories (${SRC_DIR} ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ${ASSIMP_INCLUDE_DIRS} ${INCLUDE_DIR} ${CGENGINE_INCLUDE_DIRS})

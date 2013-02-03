@@ -1,5 +1,5 @@
 /******************************************************************************
-     Copyright (C) 2013  TANGUY Arnaud arn.tanguy@gmail.com
+     Copyright (C) 2008  TANGUY Arnaud arn.tanguy@gmail.com
 *                                                                             *
 * This program is free software; you can redistribute it and/or modify        *
 * it under the terms of the GNU General Public License as published by        *
@@ -16,17 +16,16 @@
 * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 *
  ******************************************************************************/
 
-#include "BoundingBox.h"
-#include "MeshData.h"
-#include "RigidBody.h"
+#ifndef __mt__
+#define __mt__
 
-BoundingBox::BoundingBox(RigidBody *parent)
-{
-    mParent = parent;
-    mMeshData = mParent->getMeshData();
-}
+#include <glm/glm.hpp>
 
-BoundingBox::~BoundingBox()
-{
-}
+/**
+ * @brief Math Tools
+ */
+namespace mt {
+    float norm(const glm::vec3&);
+} /* mt */
 
+#endif
