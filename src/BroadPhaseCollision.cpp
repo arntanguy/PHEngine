@@ -16,43 +16,19 @@
 * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 *
  ******************************************************************************/
 
-#ifndef __PhysicsWorld__
-#define __PhysicsWorld__
-
-#include <vector>
-#include <set>
-#include <unordered_map>
-#include <unordered_set>
-#include <glm/glm.hpp>
-#include "RigidBody.h"
 #include "BroadPhaseCollision.h"
+#include "PhysicsWorld.h"
 
-
-/**
- * @brief Manages the physic world pipeline
- * Register rigid bodies to this class to manage the physic simulation
- * Steps:
- * - Apply BroadPhase collision detection
- */
-class PhysicsWorld
+BroadPhaseCollision::BroadPhaseCollision(PhysicsWorld *phWorld)
 {
-    private:
-        // Active rigid bodies
-        std::vector<RigidBody *> mRigidBodies;
-        BroadPhaseCollision *mBroadPhaseCollision;
-        std::unordered_map<RigidBodyPair, AxisCollide> mCollidingPairs;
+    mPhysicsWorld = phWorld;
+}
 
-    public:
-        PhysicsWorld();
-        ~PhysicsWorld();
+BroadPhaseCollision::~BroadPhaseCollision()
+{
+}
 
-        void addRigidBody(RigidBody *rigidBody);
-        void setBroadPhaseCollision(BroadPhaseCollision *broadPhaseCollision);
-
-        void detectCollisions();
-        void renderAllRigidBodies(float timestep);
-        std::vector<RigidBody *> getRigidBodies() const;
-};
-
-
-#endif
+std::unordered_map<RigidBodyPair, AxisCollide> BroadPhaseCollision::getCollidingPairs() const
+{
+    return mCollidingPairs;
+}

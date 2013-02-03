@@ -16,17 +16,17 @@
 * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 *
  ******************************************************************************/
 
-#include "BoundingBox.h"
+#include "BoundingVolume.h"
 #include "MeshData.h"
 #include "RigidBody.h"
 
-BoundingBox::BoundingBox(RigidBody *parent)
+BoundingVolume::BoundingVolume(RigidBody *parent)
 {
     mParent = parent;
     mMeshData = mParent->getMeshData();
 }
 
-BoundingBox::~BoundingBox()
+BoundingVolume::~BoundingVolume()
 {
 }
 

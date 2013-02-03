@@ -121,7 +121,7 @@ void RigidBody::render(float ellapsedTime)
     glPopMatrix();
 
     if(mBoundingBox != 0) {
-    mBoundingBox->render(mCollide);
+        mBoundingBox->render(mCollide);
     }
 }
 
@@ -171,12 +171,12 @@ MeshData* RigidBody::getMeshData() const
     return mMeshData;
 }
 
-void RigidBody::setBoundingBox(BoundingBox *boundingBox)
+void RigidBody::setBoundingBox(BoundingVolume *boundingBox)
 {
     mBoundingBox = boundingBox;
 }
 
-BoundingBox* RigidBody::getBoundingBox()
+BoundingVolume* RigidBody::getBoundingBox()
 {
     return mBoundingBox;
 }

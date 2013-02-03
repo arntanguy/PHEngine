@@ -32,8 +32,12 @@ SET(SOURCES
 ${SRC_DIR}/ParticleGenerator.cpp
 ${SRC_DIR}/PhysicsWorld.cpp
 ${SRC_DIR}/RigidBody.cpp
-${SRC_DIR}/BoundingBox.cpp
+${SRC_DIR}/BoundingVolume.cpp
 ${SRC_DIR}/AABoundingBox.cpp
+${SRC_DIR}/BoundingSphere.cpp
+${SRC_DIR}/BroadPhaseCollision.cpp
+${SRC_DIR}/AABBBroadPhaseCollision.cpp
+${SRC_DIR}/BoundingSphereBroadPhaseCollision.cpp
 ${SRC_DIR}/mt.cpp
 )
 

@@ -1,5 +1,5 @@
 /******************************************************************************
-     Copyright (C) 2013  TANGUY Arnaud arn.tanguy@gmail.com
+*     Copyright (C) 2013 TANGUY Arnaud arn.tanguy@gmail.com                   *
 *                                                                             *
 * This program is free software; you can redistribute it and/or modify        *
 * it under the terms of the GNU General Public License as published by        *
@@ -16,37 +16,20 @@
 * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 *
  ******************************************************************************/
 
-#ifndef __BoundingBox__
-#define __BoundingBox__
+#ifndef __AABBBroadPhaseCollision__
+#define __AABBBroadPhaseCollision__
 
-#include "Entity.h"
-#include <glm/glm.hpp>
+#include "BroadPhaseCollision.h"
 
-class MeshData;
-class RigidBody;
-
-/**
- * @brief Abstract class representing a bounding box
- * Defines essential virtual functions to all bounding boxes:
- * - Generation
- * - update (use data from parent rigid body to determine update parameters)
- * - render (debug)
- */
-class BoundingBox
+class AABBBroadPhaseCollision : public BroadPhaseCollision
 {
-    protected:
-        bool mCollide;
-
-        RigidBody *mParent;
-        MeshData *mMeshData;
-
     public:
-        BoundingBox(RigidBody *parent);
-        ~BoundingBox();
-
-        virtual bool computeFromMeshData() = 0;
-        virtual void update() = 0;
-        virtual bool render(bool collide) = 0;
+        AABBBroadPhaseCollision (PhysicsWorld *phWorld);
+        virtual ~AABBBroadPhaseCollision ();
+        virtual void update();
 };
+
+
+
 
 #endif

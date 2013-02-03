@@ -19,7 +19,7 @@
 #ifndef __AABoundingBox__
 #define __AABoundingBox__
 
-#include "BoundingBox.h"
+#include "BoundingVolume.h"
 #include "ParallelogramEntity.h"
 #include <glm/glm.hpp>
 
@@ -32,7 +32,7 @@
  * - AABB_APPROXIMATE: Computes an AABB that will fit every possible orientation of the object.
  *   The update step is trivial, only the center position of the AABB is updated.
  */
-class AABoundingBox : public BoundingBox
+class AABoundingBox : public BoundingVolume
 {
     public:
         enum Type {AABB_EXACT, AABB_APPROXIMATE};

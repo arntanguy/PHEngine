@@ -16,43 +16,37 @@
 * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 *
  ******************************************************************************/
 
-#ifndef __PhysicsWorld__
-#define __PhysicsWorld__
+#ifndef __BoundingVolume__
+#define __BoundingVolume__
 
-#include <vector>
-#include <set>
-#include <unordered_map>
-#include <unordered_set>
+#include "Entity.h"
 #include <glm/glm.hpp>
-#include "RigidBody.h"
-#include "BroadPhaseCollision.h"
 
+class MeshData;
+class RigidBody;
 
 /**
- * @brief Manages the physic world pipeline
- * Register rigid bodies to this class to manage the physic simulation
- * Steps:
- * - Apply BroadPhase collision detection
+ * @brief Abstract class representing a bounding box
+ * Defines essential virtual functions to all bounding boxes:
+ * - Generation
+ * - update (use data from parent rigid body to determine update parameters)
+ * - render (debug)
  */
-class PhysicsWorld
+class BoundingVolume
 {
-    private:
-        // Active rigid bodies
-        std::vector<RigidBody *> mRigidBodies;
-        BroadPhaseCollision *mBroadPhaseCollision;
-        std::unordered_map<RigidBodyPair, AxisCollide> mCollidingPairs;
+    protected:
+        bool mCollide;
+
+        RigidBody *mParent;
+        MeshData *mMeshData;
 
     public:
-        PhysicsWorld();
-        ~PhysicsWorld();
+        BoundingVolume(RigidBody *parent);
+        ~BoundingVolume();
 
-        void addRigidBody(RigidBody *rigidBody);
-        void setBroadPhaseCollision(BroadPhaseCollision *broadPhaseCollision);
-
-        void detectCollisions();
-        void renderAllRigidBodies(float timestep);
-        std::vector<RigidBody *> getRigidBodies() const;
+        virtual bool computeFromMeshData() = 0;
+        virtual void update() = 0;
+        virtual bool render(bool collide) = 0;
 };
-
 
 #endif

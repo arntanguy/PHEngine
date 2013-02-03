@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include "AssimpMeshEntity.h"
-#include "BoundingBox.h"
+#include "BoundingVolume.h"
 #include "AABoundingBox.h"
 
 class Entity;
@@ -29,7 +29,7 @@ class RigidBody {
         //glm::vec3 mAngularMomentum; // L(t) = I(t)*w(t)
 
         Entity *mEntity; // attached graphic entity to which physics apply
-        BoundingBox* mBoundingBox;
+        BoundingVolume* mBoundingBox;
         MeshData *mMeshData;
 
         void init();
@@ -47,7 +47,7 @@ class RigidBody {
 
         virtual void render(float ellapsedTime);
 
-        void setBoundingBox(BoundingBox *boundingBox);
+        void setBoundingBox(BoundingVolume *boundingBox);
 
         void setPosition(const glm::vec3& position);
         void setEntity(Entity *entity);
@@ -56,7 +56,7 @@ class RigidBody {
         void rotate(const glm::vec3& mAngularVelocityNorm);
         void translate(const glm::vec3& translation);
 
-        BoundingBox *getBoundingBox() ;
+        BoundingVolume *getBoundingBox() ;
         void setCollide(bool state);
         int getId() const {
             return id;

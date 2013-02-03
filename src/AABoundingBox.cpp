@@ -22,12 +22,12 @@
 #include <vector>
 #include "mt.h"
 
-AABoundingBox::AABoundingBox(RigidBody *parent, Type type = Type::AABB_EXACT) : BoundingBox(parent)
+AABoundingBox::AABoundingBox(RigidBody *parent, Type type = Type::AABB_EXACT) : BoundingVolume(parent)
 {
     init(type, glm::vec3(), glm::vec3());
 }
 
-AABoundingBox::AABoundingBox(RigidBody *parent, const glm::vec3& min, const glm::vec3& max, Type type = AABB_EXACT) : BoundingBox(parent)
+AABoundingBox::AABoundingBox(RigidBody *parent, const glm::vec3& min, const glm::vec3& max, Type type = AABB_EXACT) : BoundingVolume(parent)
 {
     init(type, min, max);
 }

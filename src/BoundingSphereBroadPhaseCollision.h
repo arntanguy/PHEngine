@@ -1,5 +1,5 @@
 /******************************************************************************
-     Copyright (C) 2013  TANGUY Arnaud arn.tanguy@gmail.com
+*     Copyright (C) 2013 TANGUY Arnaud arn.tanguy@gmail.com                   *
 *                                                                             *
 * This program is free software; you can redistribute it and/or modify        *
 * it under the terms of the GNU General Public License as published by        *
@@ -16,43 +16,20 @@
 * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 *
  ******************************************************************************/
 
-#ifndef __PhysicsWorld__
-#define __PhysicsWorld__
+#ifndef __BoundingSphereBroadPhaseCollision__
+#define __BoundingSphereBroadPhaseCollision__
 
-#include <vector>
-#include <set>
-#include <unordered_map>
-#include <unordered_set>
-#include <glm/glm.hpp>
-#include "RigidBody.h"
 #include "BroadPhaseCollision.h"
 
-
-/**
- * @brief Manages the physic world pipeline
- * Register rigid bodies to this class to manage the physic simulation
- * Steps:
- * - Apply BroadPhase collision detection
- */
-class PhysicsWorld
+class BoundingSphereBroadPhaseCollision : public BroadPhaseCollision
 {
     private:
-        // Active rigid bodies
-        std::vector<RigidBody *> mRigidBodies;
-        BroadPhaseCollision *mBroadPhaseCollision;
-        std::unordered_map<RigidBodyPair, AxisCollide> mCollidingPairs;
 
     public:
-        PhysicsWorld();
-        ~PhysicsWorld();
+        BoundingSphereBroadPhaseCollision (PhysicsWorld *phWorld);
+        virtual ~BoundingSphereBroadPhaseCollision ();
 
-        void addRigidBody(RigidBody *rigidBody);
-        void setBroadPhaseCollision(BroadPhaseCollision *broadPhaseCollision);
-
-        void detectCollisions();
-        void renderAllRigidBodies(float timestep);
-        std::vector<RigidBody *> getRigidBodies() const;
+        virtual void update();
 };
-
 
 #endif
