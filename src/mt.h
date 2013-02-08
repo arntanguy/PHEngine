@@ -26,6 +26,7 @@
  */
 namespace mt {
     float norm(const glm::vec3&);
+    int rand(int min, int max);
 } /* mt */
 
 #endif

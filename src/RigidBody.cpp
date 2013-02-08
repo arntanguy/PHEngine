@@ -55,19 +55,6 @@ void RigidBody::init()
     setCollide(false);
 }
 
-
-void RigidBody::AABB_Approximate()
-{
-    if(mMeshData != 0) {
-    }
-}
-
-void RigidBody::AABB()
-{
-    if(mMeshData != 0) {
-    }
-}
-
 RigidBody::~RigidBody()
 {
 }
@@ -81,7 +68,7 @@ void RigidBody::update(float ellapsedTime)
     if(mAngularVelocityNorm != 0) {
         mRotation *= rotationMatrix(mAngularVelocity, glm::length2(mAngularVelocity));
     } else {
-        mRotation = glm::mat4(1.0f);
+        //mRotation = glm::mat4(1.0f);
     }
     mTransformation = glm::mat4(1.f);
     glm::mat4 translation = glm::translate(mPosition.x, mPosition.y, mPosition.z);
@@ -142,10 +129,9 @@ void RigidBody::translate(const glm::vec3& translation)
     mPosition += translation;
 }
 
-void RigidBody::rotate(const glm::vec3& angularVelocity)
+void RigidBody::rotate(const glm::vec3& direction, float angle)
 {
-    mAngularVelocityNorm = glm::length2(angularVelocity);
-    mRotation *= rotationMatrix(angularVelocity, mAngularVelocityNorm);
+    mRotation *= rotationMatrix(direction, angle);
 }
 
 void RigidBody::setEntity(Entity *entity) {
@@ -153,7 +139,7 @@ void RigidBody::setEntity(Entity *entity) {
     AssimpMeshEntity *e = 0;
     e = dynamic_cast<AssimpMeshEntity *>(entity);
     if(e != 0)
-        mMeshData = e->toMeshData("bear");
+        mMeshData = e->toMeshData("Monkey");
 }
 
 void RigidBody::setPosition(const glm::vec3 & position)

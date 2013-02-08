@@ -1,5 +1,5 @@
 /******************************************************************************
-     Copyright (C) 2008  TANGUY Arnaud arn.tanguy@gmail.com
+*     Copyright (C) 2013 TANGUY Arnaud arn.tanguy@gmail.com                   *
 *                                                                             *
 * This program is free software; you can redistribute it and/or modify        *
 * it under the terms of the GNU General Public License as published by        *
@@ -16,27 +16,31 @@
 * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 *
  ******************************************************************************/
 
-#include "mt.h"
-#include <ctime>
+#ifndef __Triangle__
+#define __Triangle__
 
-namespace mt {
-    /**
-     * @brief Euclidian norm of vector
-     *
-     * @param v
-     *    The vector
-     *
-     * @return
-     *    The euclidian norm
-     */
-    float norm(const glm::vec3& v)
-    {
-        return glm::sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
-    }
+#include "Entity.h"
+#include <glm/glm.hpp>
+#include <GL/gl.h>
 
-    int rand(int min, int max)
-    {
-        return (int) (((double) std::rand() / ((double)RAND_MAX+1)) * (max-min+1) + min);
-    }
-} /* mt */
+class Triangle : public Entity
+{
+    private:
+        glm::vec3 mPoints[3];
+        glm::vec3 mNormal;
 
+    public:
+        Triangle (const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3);
+        virtual ~Triangle ();
+
+        void setPoints(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3);
+
+        virtual bool render();
+        virtual bool generate();
+
+        void closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, bool showDebug = true);
+};
+
+
+
+#endif

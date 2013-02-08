@@ -9,7 +9,14 @@
 
 class Entity;
 
-class RigidBody {
+/**
+ * @brief Represents a rigid body
+ * This class provides all the necessary functions to work with rigid bodies:
+ * - Applying transformations
+ * - Applying forces (velocity, angular momentum
+ */
+class RigidBody
+{
     private:
         static int id_counter;
         int id;
@@ -36,10 +43,6 @@ class RigidBody {
         void update(float ellapsedTime);
         glm::mat4 rotationMatrix(glm::vec3 axis, float angle);
 
-        // Rotation matrix mRotation must be set correctly
-        void AABB();
-        void AABB_Approximate();
-
     public:
         RigidBody();
         RigidBody(Entity *mEntity, const float mass);
@@ -53,7 +56,7 @@ class RigidBody {
         void setEntity(Entity *entity);
         void setAngularVelocity(const glm::vec3& direction, float magnitude);
         void setLinearMomentum(const glm::vec3 &linearMomentum);
-        void rotate(const glm::vec3& mAngularVelocityNorm);
+        void rotate(const glm::vec3& direction, float angle);
         void translate(const glm::vec3& translation);
 
         BoundingVolume *getBoundingBox() ;
@@ -74,3 +77,13 @@ class RigidBody {
 };
 
 #endif
+
+
+/********************************************
+ * Example:
+ * Entity *entity = new Entity(); // creates an entity (can be whatever derived type you want (AssimpMeshEntity, FlagEntity....)
+ * RigidBody *rigidBody = new RigidBody(entity, 10); // creates a rigid body with a mass of 10 units
+ * AABoundingBox *boundingBox = new AABoundingBox(rigidBody); // creates a bounding box from the rigid body vertex data. An entity must be attached to the rigid body first for this to work properly
+ * rigidBody->setBoundingBox(boundingBox);
+ * physicsWorld->addRigidBody(rigidBody); // Adds it to the simulation (PhysicsWorld class)
+ ***/

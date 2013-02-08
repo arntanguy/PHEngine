@@ -81,9 +81,6 @@ void AABBBroadPhaseCollision::update()
 
             // Pedicate min
             RemoveFromActiveList p(sortedListIt->min);
-            //std::vector<AABBComp>::iterator start = activeList[axis].begin();
-            //std::vector<AABBComp>::iterator end = activeList[axis].end();
-            //std::vector<AABBComp>::iterator last = std::remove_if(start, end, p ) ;
             activeList[axis].erase(std::remove_if(activeList[axis].begin(), activeList[axis].end(), p ), activeList[axis].end());
             activeList[axis].push_back(*sortedListIt);
 

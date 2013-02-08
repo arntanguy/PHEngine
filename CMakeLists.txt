@@ -38,6 +38,7 @@ ${SRC_DIR}/BoundingSphere.cpp
 ${SRC_DIR}/BroadPhaseCollision.cpp
 ${SRC_DIR}/AABBBroadPhaseCollision.cpp
 ${SRC_DIR}/BoundingSphereBroadPhaseCollision.cpp
+${SRC_DIR}/Triangle.cpp
 ${SRC_DIR}/mt.cpp
 )
 

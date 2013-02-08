@@ -43,6 +43,10 @@ void PhysicsWorld::addBroadPhaseCollisionHandler(BroadPhaseCollision *broadPhase
     mBroadPhaseCollision.push_back(broadPhaseCollision);
 }
 
+/**
+ * @brief Goes through the list of BroadPhase collision handlers,
+ * and have them check for collisions.
+ */
 void PhysicsWorld::detectCollisions()
 {
     mCollidingPairs.clear();

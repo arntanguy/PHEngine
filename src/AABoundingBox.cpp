@@ -49,6 +49,8 @@ AABoundingBox::~AABoundingBox()
 void AABoundingBox::computeExactAABB()
 {
     std::vector<glm::vec3>::const_iterator it = mMeshData->mVertices.begin();
+    mMin = glm::vec3(0);
+    mMax = glm::vec3(0);
     for(; it != mMeshData->mVertices.end(); it++)
     {
         glm::vec4 transformed = mParent->getRotation() * glm::vec4(*it, 1);
