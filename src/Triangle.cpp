@@ -55,7 +55,18 @@ bool Triangle::generate()
     return true;
 }
 
-void Triangle::closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, bool showDebug)
+/**
+ * @brief Find the closest distance from a point to a triangle based on voronoi regions
+ *
+ * @param point
+ *  The point to check against the triangle
+ * @param showDebug
+ *  A debug boolean. If true, debug objects will be drawn on the scene
+ *
+ * @return
+ *  The minimal distance between point and triangle
+ */
+float Triangle::closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, bool showDebug)
 {
     /**
      * Check closest point on triangle, using voronoi regions
@@ -65,25 +76,27 @@ void Triangle::closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, bool
 
     glm::vec3 edge[2];
     int i=0;
-    glm::vec3 AX, AB, AC, BC, BX;
+    glm::vec3 AX, AB, AC, BC, BX, BA;
     while(i < 3) {
+        std::cout << "point: " << mPoints[i].x << " " << mPoints[i].y << " " << mPoints[i].z << std::endl;
         if(i==0) {
             AX = point-mPoints[0];
             BX = point-mPoints[1];
             AB = mPoints[1]-mPoints[0];
             AC = mPoints[2]-mPoints[0];
-            BC = mPoints[1]-mPoints[2];
+            BC = mPoints[2]-mPoints[1];
             edge[0] = mPoints[1];
-            edge[1] = mPoints[2];
+            edge[1] = mPoints[0];
         } else if(i == 1) {
             AX = point-mPoints[1];
-            BX = point-mPoints[0];
-            AB = mPoints[0]-mPoints[1];
-            AC = mPoints[2]-mPoints[1];
-            BC = mPoints[2]-mPoints[0];
-            edge[0] = mPoints[0];
+            BX = point-mPoints[2];
+            AB = mPoints[2]-mPoints[1];
+            BA = mPoints[1]-mPoints[2];
+            AC = mPoints[0]-mPoints[1];
+            BC = mPoints[0]-mPoints[2];
+            edge[0] = mPoints[2];
             edge[1] = mPoints[1];
-        } else {
+        } else if(i==2) {
             AX = point-mPoints[2];
             BX = point-mPoints[0];
             AB = mPoints[0]-mPoints[2];
@@ -91,18 +104,23 @@ void Triangle::closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, bool
             BC = mPoints[1]-mPoints[0];
             edge[0] = mPoints[0];
             edge[1] = mPoints[2];
+            ////edge[0] = mPoints[0];
+            ////edge[1] = mPoints[2];
         }
 
+        std::cout << "i: " << i << std::endl;
         /**
          * Check vertex region
          **/
-        if(glm::dot(AX, AB) < 0 && glm::dot(AX, AC) < 0) {
+        if(glm::dot(AX, AB) <= 0 && glm::dot(AX, AC) <= 0) {
+                std::cout << "vertex region for i: " << i << std::endl;
                 bestPoint = mPoints[i];
                 inEdgeRegion = false;
                 break;
         } else if(glm::dot(glm::cross(glm::cross(BC, -AB), -AB), BX) >= 0
                 && glm::dot(AX,AB) >= 0
                 && glm::dot(BX, -AB) >= 0) {
+                std::cout << "edge for i: " << i << std::endl;
             /**
              * Check edge region
              **/
@@ -115,6 +133,8 @@ void Triangle::closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, bool
             bestPoint = edge[0] + glm::dot(point-edge[0], e)*e;
 
             break;
+        } else {
+            std::cout << "nothing for i: " << i << std::endl;
         }
         i++;
     }
@@ -132,4 +152,7 @@ void Triangle::closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, bool
                 dt::drawPoint(bestPoint, 0.3);
         }
     }
+
+    std::cout << "distance: " << mt::norm(point-bestPoint) << std::endl;
+    return mt::norm(point-bestPoint);
 }

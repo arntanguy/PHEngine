@@ -23,6 +23,7 @@
 #include "AABoundingBox.h"
 #include <glm/ext.hpp>
 #include "mt.h"
+#include "DrawingTools.h"
 
 int RigidBody::id_counter = 0;
 
@@ -71,7 +72,6 @@ void RigidBody::update(float ellapsedTime)
         //mRotation = glm::mat4(1.0f);
     }
     mTransformation = glm::mat4(1.f);
-    glm::mat4 translation = glm::translate(mPosition.x, mPosition.y, mPosition.z);
 
     // Transformation = rotation followed by translation
     mTransformation *= glm::translate(mPosition.x, mPosition.y, mPosition.z) * mRotation ;
@@ -157,6 +157,20 @@ MeshData* RigidBody::getMeshData() const
     return mMeshData;
 }
 
+MeshData* RigidBody::getTransformedMeshData() const
+{
+    MeshData *tMesh = new MeshData();
+    for (int i = 0; i < mMeshData->mVertices.size(); i++) {
+        glm::vec4 transformedV = mTransformation * glm::vec4(mMeshData->mVertices.at(i),1.f);
+        tMesh->mVertices.push_back(glm::vec3(transformedV));
+        if(i < mMeshData->mNormals.size()) {
+            glm::vec4 transformedN = mTransformation * glm::vec4(mMeshData->mNormals.at(i),1.f);
+            tMesh->mNormals.push_back(glm::vec3(transformedN));
+        }
+    }
+    return tMesh;
+}
+
 void RigidBody::setBoundingBox(BoundingVolume *boundingBox)
 {
     mBoundingBox = boundingBox;
@@ -167,3 +181,31 @@ BoundingVolume* RigidBody::getBoundingBox()
     return mBoundingBox;
 }
 
+
+float RigidBody::distanceToPlane(RigidBody *planeRigidBody)
+{
+    MeshData *data = getTransformedMeshData();
+    std::vector<glm::vec3>::iterator it = data->mVertices.begin();
+    MeshData *planeMeshData = planeRigidBody->getTransformedMeshData();
+    std::vector<glm::vec3>::iterator planeIt = planeMeshData->mVertices.begin();
+
+    float distance = 0;
+    float norm = 0;
+    glm::vec3 pointPlane, pointObject;
+    if(it != data->mVertices.end()) distance = mt::norm((*it++)-(*planeIt++));
+    for(it=data->mVertices.begin() ; it != data->mVertices.end(); it++ ) {
+        for(planeIt = planeMeshData->mVertices.begin(); planeIt != planeMeshData->mVertices.end(); planeIt++ ) {
+            norm = mt::norm((*it)-(*planeIt));
+            if(norm <= distance) {
+                distance = norm;
+                pointPlane = (*planeIt);
+                pointObject = (*it);
+            }
+        }
+    }
+    dt::drawPoint(pointPlane);
+    dt::drawPoint(pointObject);
+    dt::drawLine(pointPlane, pointObject);
+
+    return distance;
+}

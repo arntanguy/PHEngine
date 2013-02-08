@@ -28,6 +28,7 @@ class RigidBody
         float mAngularVelocityNorm;
 
         bool mCollide;
+        bool mDebug;
 
         glm::mat4 mTransformation; // Final transformation
 
@@ -60,6 +61,8 @@ class RigidBody
         void translate(const glm::vec3& translation);
 
         BoundingVolume *getBoundingBox() ;
+        float distanceToPlane(RigidBody *planeRigidBody);
+
         void setCollide(bool state);
         int getId() const {
             return id;
@@ -74,6 +77,7 @@ class RigidBody
             return mPosition;
         }
         MeshData *getMeshData() const;
+        MeshData* getTransformedMeshData() const;
 };
 
 #endif

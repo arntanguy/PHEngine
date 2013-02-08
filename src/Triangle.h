@@ -38,7 +38,7 @@ class Triangle : public Entity
         virtual bool render();
         virtual bool generate();
 
-        void closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, bool showDebug = true);
+        float closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, bool showDebug = true);
 };
 
 
