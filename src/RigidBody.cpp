@@ -182,6 +182,89 @@ BoundingVolume* RigidBody::getBoundingBox()
 }
 
 
+ContactModel* RigidBody::distanceVerticesToVerticesMesh(RigidBody *otherRigidBody)
+{
+    MeshData *data = getTransformedMeshData();
+    std::vector<glm::vec3>::iterator it = data->mVertices.begin();
+    MeshData *otherMeshData = otherRigidBody->getTransformedMeshData();
+    std::vector<glm::vec3>::iterator otherIt = otherMeshData->mVertices.begin();
+
+    float distance = 0;
+    float norm = 0;
+    glm::vec3 pointPlane, pointObject;
+    glm::vec3 projectionOnPlane;
+    glm::vec3 minProjectionOnEdge;
+    glm::vec3 edge1, edge2, pointEdge;
+    float minProjectionOnEdgeDistance = 100000;
+    // Edges
+    glm::vec3 e1, e2;
+    if(otherMeshData->mVertices.size() > 1) {
+        e1 = otherMeshData->mVertices[0];
+        e2 = otherMeshData->mVertices[1];
+    }
+    if(it != data->mVertices.end()) distance = mt::norm((*it++)-(*otherIt++));
+    for(it=data->mVertices.begin() ; it != data->mVertices.end(); it++ ) {
+        for(otherIt = otherMeshData->mVertices.begin(); otherIt != otherMeshData->mVertices.end(); otherIt++ ) {
+            // Vertex-Vertex
+            norm = mt::norm((*it)-(*otherIt));
+            if(norm <= distance) {
+                distance = norm;
+                pointPlane = (*otherIt);
+                pointObject = (*it);
+            }
+
+
+            // Vertex-Edge
+            glm::vec3 edgeVector = glm::normalize(e2-e1);
+            glm::vec3 projection = e1 + glm::dot((*it) - e1, edgeVector) * edgeVector;
+            // Check if on edge segment
+            if(glm::dot(e2-e1, projection-e1)  > 0 && glm::dot(e2-projection, e2-e1) > 0) {
+                norm = mt::norm((*it)-projection);
+                //std::cout << "project on edge " << e1.x << " " << e1.y << " " << e1.z << ", " << e2.x << " " << e2.y << " " << e2.z << std::endl;
+                //std::cout << "projection distance" << norm << std::endl;
+                if(norm < minProjectionOnEdgeDistance)
+                {
+                    //std::cout << "dot: " << glm::dot(e2-e1, projection-e1) << " " << glm::dot(e2-projection, e2-e1) << std::endl;
+                    minProjectionOnEdgeDistance = norm;
+                    minProjectionOnEdge = projection;
+                    edge1 = e1;
+                    edge2 = e2;
+                    pointEdge= (*it);
+                }
+            }
+            // next edge
+            e1 = e2;
+            e2 = (*otherIt);
+        }
+    }
+    ContactModel *contactModel = new ContactModel();
+    // V-E collision
+    if(minProjectionOnEdgeDistance < distance) {
+        dt::drawPoint(minProjectionOnEdge, 0.2, glm::vec3(1., 1., 0.));
+        dt::drawPoint(pointEdge, 0.2, glm::vec3(1., 1., 0.));
+        dt::drawLine(edge1, minProjectionOnEdge);
+        dt::drawLine(edge2, minProjectionOnEdge);
+        dt::drawLine(edge2, edge1,glm::vec3(0,0,1), 0.2f, 0.2f, glm::vec3(1.,0., 0.));
+        dt::drawLine(pointEdge, minProjectionOnEdge);
+
+        contactModel->contactPoint = 0.5f * (pointObject + minProjectionOnEdge);
+        contactModel->normal = glm::normalize(pointObject-minProjectionOnEdge);
+        contactModel->distance = minProjectionOnEdgeDistance;
+        contactModel->type = ContactModel::Type::VE;
+    } else {
+        dt::drawPoint(pointPlane);
+        glm::vec3 contactPoint = 0.5f*(pointPlane + pointObject);
+        dt::drawPoint(contactPoint, 0.2, glm::vec3(1., 0., 0.));
+        dt::drawPoint(pointObject);
+        dt::drawLine(pointPlane, pointObject);
+        contactModel->distance = distance;
+        contactModel->normal = glm::normalize(pointPlane-pointObject);
+        contactModel->contactPoint = contactPoint;
+        contactModel->type = ContactModel::Type::VV;
+    }
+
+    return contactModel;
+}
 float RigidBody::distanceToPlane(RigidBody *planeRigidBody)
 {
     MeshData *data = getTransformedMeshData();
@@ -191,7 +274,16 @@ float RigidBody::distanceToPlane(RigidBody *planeRigidBody)
 
     float distance = 0;
     float norm = 0;
+    std::cout << "size normals: " << planeMeshData->mNormals.size() << std::endl;
+    glm::vec3 planeNormal;
+    if(planeMeshData->mNormals.size() > 0)
+        planeNormal = planeMeshData->mNormals[0];
+    else {
+        dinf<< "RigidBody::distanceToPlane: No normal defined on plane, aborting!";
+        return 0;
+    }
     glm::vec3 pointPlane, pointObject;
+    glm::vec3 projectionOnPlane;
     if(it != data->mVertices.end()) distance = mt::norm((*it++)-(*planeIt++));
     for(it=data->mVertices.begin() ; it != data->mVertices.end(); it++ ) {
         for(planeIt = planeMeshData->mVertices.begin(); planeIt != planeMeshData->mVertices.end(); planeIt++ ) {
@@ -199,6 +291,13 @@ float RigidBody::distanceToPlane(RigidBody *planeRigidBody)
             if(norm <= distance) {
                 distance = norm;
                 pointPlane = (*planeIt);
+                pointObject = (*it);
+            }
+            float distanceToPlane = glm::dot((*it), planeNormal);
+            projectionOnPlane = (*it)-distanceToPlane*planeNormal;
+            if(distanceToPlane <= distance) {
+                distance = distanceToPlane;
+                pointPlane = projectionOnPlane;
                 pointObject = (*it);
             }
         }

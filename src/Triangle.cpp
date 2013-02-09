@@ -71,6 +71,7 @@ float Triangle::closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, boo
     /**
      * Check closest point on triangle, using voronoi regions
      **/
+    std::cout << "point: " << point.x << " " << point.y << " " << point.z << std::endl;
     bool inEdgeRegion = false;
     glm::vec3 bestPoint;
 
@@ -78,47 +79,44 @@ float Triangle::closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, boo
     int i=0;
     glm::vec3 AX, AB, AC, BC, BX;
     while(i < 3) {
-        AX = point-mPoints[i%3];
-        BX = point-mPoints[(i+1)%3];
-        AB = mPoints[(i+1)%3]-mPoints[i%3];
-        AC = mPoints[(i+2)%3]-mPoints[i%3];
-        BC = mPoints[(i+2)%3]-mPoints[(i+1)%3];
-        if(i<2) {
-            edge[i%3] = mPoints[(i+1)%3];
-            edge[(i+1)%3] = mPoints[i%3];
-        } else {
-            edge[0] = mPoints[0];
-            edge[1] = mPoints[2];
-        }
-        // Just for helping with understanding
-        //if(i==0) {
-        //AX = point-mPoints[0];
-        //BX = point-mPoints[1];
-        //AB = mPoints[1]-mPoints[0];
-        //AC = mPoints[2]-mPoints[0];
-        //BC = mPoints[2]-mPoints[1];
-        //edge[0] = mPoints[1];
-        //edge[1] = mPoints[0];
-        //} else if(i == 1) {
-        //AX = point-mPoints[1];
-        //BX = point-mPoints[2];
-        //AB = mPoints[2]-mPoints[1];
-        //BA = mPoints[1]-mPoints[2];
-        //AC = mPoints[0]-mPoints[1];
-        //BC = mPoints[0]-mPoints[2];
-        //edge[0] = mPoints[2];
-        //edge[1] = mPoints[1];
-        //} else if(i==2) {
-        //AX = point-mPoints[2];
-        //BX = point-mPoints[0];
-        //AB = mPoints[0]-mPoints[2];
-        //AC = mPoints[1]-mPoints[2];
-        //BC = mPoints[1]-mPoints[0];
-        //edge[0] = mPoints[0];
-        //edge[1] = mPoints[2];
-        //////edge[0] = mPoints[0];
-        //////edge[1] = mPoints[2];
+        //AX = point-mPoints[i%3];
+        //BX = point-mPoints[(i+1)%3];
+        //AB = mPoints[(i+1)%3]-mPoints[i%3];
+        //AC = mPoints[(i+2)%3]-mPoints[i%3];
+        //BC = mPoints[(i+2)%3]-mPoints[(i+1)%3];
+        //if(i<2) {
+            //edge[i%3] = mPoints[(i+1)%3];
+            //edge[(i+1)%3] = mPoints[i%3];
+        //} else {
+            //edge[0] = mPoints[0];
+            //edge[1] = mPoints[2];
         //}
+        // Just for helping with understanding
+        if(i==0) {
+        AX = point-mPoints[0];
+        BX = point-mPoints[1];
+        AB = mPoints[1]-mPoints[0];
+        AC = mPoints[2]-mPoints[0];
+        BC = mPoints[2]-mPoints[1];
+        edge[0] = mPoints[1];
+        edge[1] = mPoints[0];
+        } else if(i == 1) {
+        AX = point-mPoints[1];
+        BX = point-mPoints[2];
+        AB = mPoints[2]-mPoints[1];
+        AC = mPoints[0]-mPoints[1];
+        BC = mPoints[0]-mPoints[2];
+        edge[0] = mPoints[2];
+        edge[1] = mPoints[1];
+        } else if(i==2) {
+        AX = point-mPoints[2];
+        BX = point-mPoints[0];
+        AB = mPoints[0]-mPoints[2];
+        AC = mPoints[1]-mPoints[2];
+        BC = mPoints[1]-mPoints[0];
+        edge[0] = mPoints[0];
+        edge[1] = mPoints[2];
+        }
 
         /**
          * Check vertex region
@@ -130,6 +128,16 @@ float Triangle::closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, boo
         } else if(glm::dot(glm::cross(glm::cross(BC, -AB), -AB), BX) >= 0
                 && glm::dot(AX,AB) >= 0
                 && glm::dot(BX, -AB) >= 0) {
+        //} else if(glm::dot(glm::cross(glm::cross(BC, -AB), -AB), BX) >= 0) {
+            //std::cout << "test1" << std::endl;
+            //if(glm::dot(AX,AB)>=0) {
+                //std::cout << "test2" << std::endl;
+            //} if(glm::dot(BX, -AB) >= 0){
+                //std::cout << "test3" << std::endl;
+            //}
+                //&& glm::dot(AX,AB) >= 0
+                //&& glm::dot(BX, -AB) >= 0) {
+
             /**
              * Check edge region
              **/
@@ -142,6 +150,12 @@ float Triangle::closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, boo
             bestPoint = edge[0] + glm::dot(point-edge[0], e)*e;
 
             break;
+        } else {
+            /**
+             * We're inside the triangle => orthogonal projection on triangle surface
+             **/
+            std::cout << "Project onto plane..." << std::endl;
+            bestPoint = point - (glm::dot(point, mNormal)) * mNormal;
         }
         i++;
     }

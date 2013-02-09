@@ -9,6 +9,15 @@
 
 class Entity;
 
+struct ContactModel
+{
+    enum Type {VV, VE, EE};
+    Type type;
+    glm::vec3 contactPoint;
+    glm::vec3 normal;
+    float distance;
+};
+
 /**
  * @brief Represents a rigid body
  * This class provides all the necessary functions to work with rigid bodies:
@@ -29,8 +38,7 @@ class RigidBody
 
         bool mCollide;
         bool mDebug;
-
-        glm::mat4 mTransformation; // Final transformation
+glm::mat4 mTransformation; // Final transformation
 
 
         //glm::vec3 mIntertialTensor; // I(t)
@@ -62,6 +70,7 @@ class RigidBody
 
         BoundingVolume *getBoundingBox() ;
         float distanceToPlane(RigidBody *planeRigidBody);
+        ContactModel* distanceVerticesToVerticesMesh(RigidBody *planeRigidBody);
 
         void setCollide(bool state);
         int getId() const {
