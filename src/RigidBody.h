@@ -23,7 +23,20 @@ struct ContactModel
  * This class provides all the necessary functions to work with rigid bodies:
  * - Applying transformations
  * - Applying forces (velocity, angular momentum
- */
+ *
+ *
+ * Example:
+ *
+ * Entity *entity = new Entity(); // creates an entity (can be whatever derived type you want (AssimpMeshEntity, FlagEntity....)
+ *
+ * RigidBody *rigidBody = new RigidBody(entity, 10); // creates a rigid body with a mass of 10 units
+ *
+ * AABoundingBox *boundingBox = new AABoundingBox(rigidBody); // creates a bounding box from the rigid body vertex data. An entity must be attached to the rigid body first for this to work properly
+ *
+ * rigidBody->setBoundingBox(boundingBox);
+ *
+ * physicsWorld->addRigidBody(rigidBody); // Adds it to the simulation (PhysicsWorld class)
+ ***/
 class RigidBody
 {
     private:
@@ -70,8 +83,6 @@ glm::mat4 mTransformation; // Final transformation
 
         BoundingVolume *getBoundingBox() ;
         ContactModel* distanceMeshToMesh(RigidBody *planeRigidBody);
-        bool projectPointOnEdge(glm::vec3 e1, glm::vec3 e2, glm::vec3 point, glm::vec3 &projection);
-        bool onEdge(const glm::vec3 &point, const glm::vec3& e1, const glm::vec3& e2);
 
         void setCollide(bool state);
         int getId() const {
@@ -93,11 +104,3 @@ glm::mat4 mTransformation; // Final transformation
 #endif
 
 
-/********************************************
- * Example:
- * Entity *entity = new Entity(); // creates an entity (can be whatever derived type you want (AssimpMeshEntity, FlagEntity....)
- * RigidBody *rigidBody = new RigidBody(entity, 10); // creates a rigid body with a mass of 10 units
- * AABoundingBox *boundingBox = new AABoundingBox(rigidBody); // creates a bounding box from the rigid body vertex data. An entity must be attached to the rigid body first for this to work properly
- * rigidBody->setBoundingBox(boundingBox);
- * physicsWorld->addRigidBody(rigidBody); // Adds it to the simulation (PhysicsWorld class)
- ***/

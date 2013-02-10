@@ -25,6 +25,7 @@
 #include "mt.h"
 #include "DrawingTools.h"
 #include <limits.h> // For max size of numbers
+#include "Triangle.h"
 
 
 int RigidBody::id_counter = 0;
@@ -185,36 +186,6 @@ BoundingVolume* RigidBody::getBoundingBox()
     return mBoundingBox;
 }
 
-/**
- * @brief Gives the coordinates of the projected point onto an edge
- *
- * @param e1
- *  Edge point 1
- * @param e2
- *  Edge point 2
- * @param point
- *  Point to project
- * @param projection
- *  Return parameter: result of the projection
- *
- * @return
- *      A boolean:
- *      - True if point is in edge segment
- *      - False if point is outside of edge segment
- */
-bool RigidBody::projectPointOnEdge(glm::vec3 e1, glm::vec3 e2, glm::vec3 point, glm::vec3 &projection)
-{
-        glm::vec3 ev = glm::normalize(e2 - e1);
-        projection = e1 + glm::dot(point - e1, ev) * ev;
-        // Check if on edge segment
-        return (glm::dot(ev, projection-e1)  > 0 && glm::dot(e2-projection, ev) > 0);
-}
-
-bool RigidBody::onEdge(const glm::vec3 &point, const glm::vec3& e1, const glm::vec3& e2)
-{
-    glm::vec3 ev = glm::normalize(e2-e1);
-    return (glm::dot(ev, glm::normalize(point-e1))  > 0.9 && glm::dot(glm::normalize(e2-point), ev) > 0.9);
-}
 
 /**
  * @brief Compute a contact model from the minimal distance from mesh to mesh
@@ -236,6 +207,7 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
     float normVV = FLT_MAX;
     float normEE = FLT_MAX;
     float normVE = FLT_MAX;
+    float normVF = FLT_MAX;
 
     float norm = 0;
     glm::vec3 pointPlane, pointObject;
@@ -250,6 +222,9 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
     glm::vec3 minPE1, minPE2;
     glm::vec3 EEedge11, EEedge12, EEedge21, EEedge22;
 
+    //V-F
+    glm::vec3 minPF1, minPF2;
+
     // Init first edges
     if(otherMeshData->mVertices.size() > 1) {
         e1 = otherMeshData->mVertices[0];
@@ -262,7 +237,9 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
         eov = glm::normalize(eo2 - eo1);
     }
 
+    int triangle = 0;
     for(it=data->mVertices.begin() ; it != data->mVertices.end(); it++ ) {
+        triangle = 0;
         for(otherIt = otherMeshData->mVertices.begin(); otherIt != otherMeshData->mVertices.end(); otherIt++ ) {
             // Vertex-Vertex
             // Straight computation of norm between vertices
@@ -279,7 +256,7 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
             ev = glm::normalize(e2-e1);
             glm::vec3 projection;
             // Project and check if edge is on segment
-            if(projectPointOnEdge(e1, e2, (*it), projection)) {
+            if(mt::projectPointOnEdge(e1, e2, (*it), projection)) {
                 norm = mt::norm((*it)-projection);
                 if(norm <= normVE)
                 {
@@ -301,10 +278,10 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
              */
             float k = glm::dot(ev, eov);
             glm::vec3 pE1 = e1 + (glm::dot(eo1-e1, ev-k*eov) * ev);
-            if(onEdge(pE1, e1, e2)) {
+            if(mt::onEdge(pE1, e1, e2)) {
 
                 glm::vec3 pE2;
-                if(projectPointOnEdge(eo1, eo2, pE1, pE2)) {
+                if(mt::projectPointOnEdge(eo1, eo2, pE1, pE2)) {
                     norm = mt::norm(pE2-pE1);
                     if(norm < normEE) {
                         normEE = norm;
@@ -318,6 +295,35 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
                         EEedge22 = eo2;
                     }
                 }
+            }
+
+
+            /*
+             * Vertex-Face
+             */
+            // 3 vertices of the triangle
+            glm::vec3 f1, f2, f3;
+            glm::vec3 pF;
+            // XXX: don't compute normal if correctly specified
+            glm::vec3 n;
+            if(3*triangle+2 <= otherMeshData->mVertices.size()) {
+                f1 = otherMeshData->mVertices[3*triangle];
+                f2 = otherMeshData->mVertices[3*triangle+1];
+                f3 = otherMeshData->mVertices[3*triangle+2];
+                // XXX: use model normals instead
+                n = glm::normalize(glm::cross(f2-f1, f3-f1));
+                // Show normal
+                //dt::drawLine(f1, f1+n);
+
+                if(mt::projectOnTriangle(f1, f2, f3, n, (*it), pF)) {
+                    norm = mt::norm(pF-(*it));
+                    if(norm < normVF) {
+                        normVF = norm;
+                        minPF1 = (*it);
+                        minPF2 = pF;
+                    }
+                }
+                triangle++;
             }
 
             // next edge of other object
@@ -335,9 +341,24 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
     //std::cout << "dist V-V: " << normVV << std::endl;
     //std::cout << "dist V-E: " << normVE << std::endl;
     //std::cout << "dist E-E: " << normEE << std::endl;
+    //std::cout << "dist V-F: " << normVF << std::endl;
 
+    // V-V
+    if( (normVV <= normVE) && (normVV <= normEE) && (normVV <= normVF)) {
+        //std::cout << "VV" <<std::endl;
+        dt::drawPoint(pointPlane);
+        glm::vec3 contactPoint = 0.5f*(pointPlane + pointObject);
+        dt::drawPoint(contactPoint, 0.2, glm::vec3(1., 0., 0.));
+        dt::drawPoint(pointObject);
+        dt::drawLine(pointPlane, pointObject);
+        contactModel->distance = normVV;
+        contactModel->normal = glm::normalize(pointPlane-pointObject);
+        contactModel->contactPoint = contactPoint;
+        contactModel->type = ContactModel::Type::VV;
+    }
     // V-E collision
-    if(normVE <= normVV && normVE <= normEE) {
+    if((normVE <= normVV) && (normVE <= normEE) && (normVE <= normVF)) {
+        //std::cout << "VE" <<std::endl;
         dt::drawPoint(minProjectionOnEdge, 0.2, glm::vec3(1., 1., 0.));
         dt::drawPoint(pointEdge, 0.2, glm::vec3(1., 1., 0.));
         dt::drawLine(edge1, minProjectionOnEdge);
@@ -350,23 +371,21 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
         contactModel->distance = normVE;
         contactModel->type = ContactModel::Type::VE;
     }
-    if(normEE <= normVV && normEE <= normVE) {
+    // E-E
+    if((normEE <= normVV) && (normEE <= normVE) && (normVE <= normVF)) {
+        //std::cout << "EE" <<std::endl;
             dt::drawPoint(minPE1, 0.2, glm::vec3(1.,1., 0.));
             dt::drawPoint(minPE2, 0.2, glm::vec3(1.,1., 0.));
             dt::drawLine(minPE1, minPE2);
             dt::drawLine(EEedge11, EEedge12,glm::vec3(0,0,1), 0.2f, 0.2f, glm::vec3(1.,0., 0.));
             dt::drawLine(EEedge21, EEedge22,glm::vec3(0,0,1), 0.2f, 0.2f, glm::vec3(1.,0., 0.));
     }
-    if(normVV <= normEE && normVV <= normVE) {
-        dt::drawPoint(pointPlane);
-        glm::vec3 contactPoint = 0.5f*(pointPlane + pointObject);
-        dt::drawPoint(contactPoint, 0.2, glm::vec3(1., 0., 0.));
-        dt::drawPoint(pointObject);
-        dt::drawLine(pointPlane, pointObject);
-        contactModel->distance = normVV;
-        contactModel->normal = glm::normalize(pointPlane-pointObject);
-        contactModel->contactPoint = contactPoint;
-        contactModel->type = ContactModel::Type::VV;
+    // V-F
+    if((normVF <= normEE) && (normVF <= normVE) && (normVF <= normVV)) {
+        //std::cout << "VF" <<std::endl;
+        dt::drawPoint(minPF1);
+        dt::drawPoint(minPF2);
+        dt::drawLine(minPF1, minPF2);
     }
 
     return contactModel;
