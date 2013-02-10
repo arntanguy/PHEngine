@@ -69,8 +69,9 @@ glm::mat4 mTransformation; // Final transformation
         void translate(const glm::vec3& translation);
 
         BoundingVolume *getBoundingBox() ;
-        float distanceToPlane(RigidBody *planeRigidBody);
-        ContactModel* distanceVerticesToVerticesMesh(RigidBody *planeRigidBody);
+        ContactModel* distanceMeshToMesh(RigidBody *planeRigidBody);
+        bool projectPointOnEdge(glm::vec3 e1, glm::vec3 e2, glm::vec3 point, glm::vec3 &projection);
+        bool onEdge(const glm::vec3 &point, const glm::vec3& e1, const glm::vec3& e2);
 
         void setCollide(bool state);
         int getId() const {
