@@ -11,10 +11,13 @@ class Entity;
 
 struct ContactModel
 {
-    enum Type {VV, VE, EE};
+    enum Type {VV, VE, EE, VF};
     Type type;
     glm::vec3 contactPoint;
     glm::vec3 normal;
+    glm::vec3 edge1[2];
+    glm::vec3 edge2[2];
+    glm::vec3 edge3[2];
     float distance;
 };
 
@@ -48,10 +51,11 @@ class RigidBody
         glm::vec3 mLinearMomentum; // P(t) = v(t)*m
         glm::vec3 mAngularVelocity; // w(t) = {wx, wy, wz}. Magnitude encodes speed of the spin
         float mAngularVelocityNorm;
+        float mScaleFactorX, mScaleFactorY, mScaleFactorZ;
 
         bool mCollide;
         bool mDebug;
-glm::mat4 mTransformation; // Final transformation
+        glm::mat4 mTransformation; // Final transformation
 
 
         //glm::vec3 mIntertialTensor; // I(t)
@@ -79,6 +83,8 @@ glm::mat4 mTransformation; // Final transformation
         void setAngularVelocity(const glm::vec3& direction, float magnitude);
         void setLinearMomentum(const glm::vec3 &linearMomentum);
         void rotate(const glm::vec3& direction, float angle);
+        void scale(float scaleFactor);
+        void scale(float scaleFactorX, float scaleFactorY, float scaleFactorZ);
         void translate(const glm::vec3& translation);
 
         BoundingVolume *getBoundingBox() ;

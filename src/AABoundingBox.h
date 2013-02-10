@@ -53,7 +53,7 @@ class AABoundingBox : public BoundingVolume
         void update(const glm::vec3& center, const glm::vec3& mMin, const glm::vec3& mMax);
 
     public:
-        AABoundingBox(RigidBody *parent, Type type);
+        AABoundingBox(RigidBody *parent, Type type = Type::AABB_EXACT);
         AABoundingBox(RigidBody *parent, const glm::vec3& mMin, const glm::vec3& mMax, Type type);
         ~AABoundingBox();
 

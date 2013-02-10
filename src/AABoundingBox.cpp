@@ -22,7 +22,7 @@
 #include <vector>
 #include "mt.h"
 
-AABoundingBox::AABoundingBox(RigidBody *parent, Type type = Type::AABB_EXACT) : BoundingVolume(parent)
+AABoundingBox::AABoundingBox(RigidBody *parent, Type type) : BoundingVolume(parent)
 {
     init(type, glm::vec3(), glm::vec3());
 }

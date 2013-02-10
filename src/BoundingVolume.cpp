@@ -23,7 +23,7 @@
 BoundingVolume::BoundingVolume(RigidBody *parent)
 {
     mParent = parent;
-    mMeshData = mParent->getMeshData();
+    mMeshData = mParent->getTransformedMeshData();
 }
 
 BoundingVolume::~BoundingVolume()

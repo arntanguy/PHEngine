@@ -27,6 +27,7 @@ PhysicsWorld::PhysicsWorld()
 {
     addBroadPhaseCollisionHandler(new AABBBroadPhaseCollision(this));
     addBroadPhaseCollisionHandler(new BoundingSphereBroadPhaseCollision(this));
+    mDebugBoundingVolume = true;
 }
 PhysicsWorld::~PhysicsWorld()
 {
@@ -47,7 +48,7 @@ void PhysicsWorld::addBroadPhaseCollisionHandler(BroadPhaseCollision *broadPhase
  * @brief Goes through the list of BroadPhase collision handlers,
  * and have them check for collisions.
  */
-void PhysicsWorld::detectCollisions()
+void PhysicsWorld::detectBroadPhaseCollisions()
 {
     mCollidingPairs.clear();
     if(mBroadPhaseCollision.size() != 0) {
@@ -66,14 +67,34 @@ void PhysicsWorld::detectCollisions()
     }
 }
 
+void PhysicsWorld::checkCollisions(float minDistance)
+{
+    detectBroadPhaseCollisions();
+    std::unordered_map<RigidBodyPair, AxisCollide>::iterator it;
+    ContactModel *contactModel;
+    for( it = mCollidingPairs.begin() ; it != mCollidingPairs.end(); it++ ) {
+        RigidBodyPair pair = it->first;
+        contactModel = pair.rigidBody1->distanceMeshToMesh(pair.rigidBody2);
+
+        if(contactModel->distance <= minDistance) {
+            std::cout << "Narrow phase collision with distance: " << contactModel->distance << std::endl;
+        }
+    }
+
+}
+
 void PhysicsWorld::renderAllRigidBodies(float timestep)
 {
     // Set debug info
     std::unordered_map<RigidBodyPair, AxisCollide>::iterator cit = mCollidingPairs.begin();
     for(; cit != mCollidingPairs.end(); cit++) {
         if(cit->second.collide()) {
-        cit->first.rigidBody1->setCollide(true);
-        cit->first.rigidBody2->setCollide(true);
+            cit->first.rigidBody1->setCollide(true);
+            cit->first.rigidBody2->setCollide(true);
+            //if(mDebugBoundingVolume) {
+                //cit->first.rigidBody1->getBoundingBox()->render(true);
+                //cit->first.rigidBody2->getBoundingBox()->render(true);
+            //}
         }
     }
 
@@ -81,6 +102,9 @@ void PhysicsWorld::renderAllRigidBodies(float timestep)
     std::vector<RigidBody *>::iterator it;
     for(it = mRigidBodies.begin(); it != mRigidBodies.end(); it++) {
         (*it)->render(timestep);
+        if(mDebugBoundingVolume) {
+            (*it)->getBoundingBox()->render(false);
+        }
     }
 
     // Restore debug info

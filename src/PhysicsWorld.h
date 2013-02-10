@@ -36,6 +36,9 @@
  */
 class PhysicsWorld
 {
+    protected:
+        bool mDebugBoundingVolume;
+
     private:
         // Active rigid bodies
         std::vector<RigidBody *> mRigidBodies;
@@ -49,7 +52,8 @@ class PhysicsWorld
         void addRigidBody(RigidBody *rigidBody);
         void addBroadPhaseCollisionHandler(BroadPhaseCollision *broadPhaseCollision);
 
-        void detectCollisions();
+        void detectBroadPhaseCollisions();
+        void checkCollisions(float minDistance);
         void renderAllRigidBodies(float timestep);
         std::vector<RigidBody *> getRigidBodies() const;
 };

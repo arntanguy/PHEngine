@@ -53,6 +53,7 @@ void RigidBody::init()
     mAngularVelocityNorm = 0;
     mLinearMomentum = glm::vec3(0.f, 0.f, 0.f);
     setAngularVelocity(glm::vec3(0.f, 0.f, 0.f), 0.f);
+    scale(1.f, 1.f, 1.f);
 
     mBoundingBox = 0;
 
@@ -108,7 +109,10 @@ void RigidBody::render(float ellapsedTime)
     glPushMatrix();
         // Multiply current stack by matrix
         glMultMatrixf(mat);
+        glPushMatrix();
+        glScalef(mScaleFactorX, mScaleFactorY, mScaleFactorZ);
         mEntity->render();
+        glPopMatrix();
     glPopMatrix();
 
     if(mBoundingBox != 0) {
@@ -166,7 +170,7 @@ MeshData* RigidBody::getTransformedMeshData() const
 {
     MeshData *tMesh = new MeshData();
     for (int i = 0; i < mMeshData->mVertices.size(); i++) {
-        glm::vec4 transformedV = mTransformation * glm::vec4(mMeshData->mVertices.at(i),1.f);
+        glm::vec4 transformedV = mTransformation * glm::scale(mScaleFactorX, mScaleFactorY, mScaleFactorZ) * glm::vec4(mMeshData->mVertices.at(i),1.f);
         tMesh->mVertices.push_back(glm::vec3(transformedV));
         if(i < mMeshData->mNormals.size()) {
             glm::vec4 transformedN = mTransformation * glm::vec4(mMeshData->mNormals.at(i),1.f);
@@ -224,6 +228,7 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
 
     //V-F
     glm::vec3 minPF1, minPF2;
+    glm::vec3 vfEdge1[2], vfEdge2[2], vfEdge3[2];
 
     // Init first edges
     if(otherMeshData->mVertices.size() > 1) {
@@ -321,6 +326,10 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
                         normVF = norm;
                         minPF1 = (*it);
                         minPF2 = pF;
+
+                        vfEdge1[0] = f1; vfEdge1[1] = f2;
+                        vfEdge2[0] = f2; vfEdge2[0] = f3;
+                        vfEdge3[0] = f3; vfEdge3[0] = f1;
                     }
                 }
                 triangle++;
@@ -372,13 +381,23 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
         contactModel->type = ContactModel::Type::VE;
     }
     // E-E
-    if((normEE <= normVV) && (normEE <= normVE) && (normVE <= normVF)) {
+    if((normEE <= normVV) & (normEE <= normVE) && (normEE <= normVF)) {
         //std::cout << "EE" <<std::endl;
-            dt::drawPoint(minPE1, 0.2, glm::vec3(1.,1., 0.));
-            dt::drawPoint(minPE2, 0.2, glm::vec3(1.,1., 0.));
-            dt::drawLine(minPE1, minPE2);
-            dt::drawLine(EEedge11, EEedge12,glm::vec3(0,0,1), 0.2f, 0.2f, glm::vec3(1.,0., 0.));
-            dt::drawLine(EEedge21, EEedge22,glm::vec3(0,0,1), 0.2f, 0.2f, glm::vec3(1.,0., 0.));
+        dt::drawPoint(minPE1, 0.2, glm::vec3(1.,1., 0.));
+        dt::drawPoint(minPE2, 0.2, glm::vec3(1.,1., 0.));
+        dt::drawLine(minPE1, minPE2);
+        dt::drawLine(EEedge11, EEedge12,glm::vec3(0,0,1), 0.2f, 0.2f, glm::vec3(1.,0., 0.));
+        dt::drawLine(EEedge21, EEedge22,glm::vec3(0,0,1), 0.2f, 0.2f, glm::vec3(1.,0., 0.));
+
+
+        contactModel->type = ContactModel::Type::EE;
+        contactModel->contactPoint = 0.5f * (minPE1+minPE2);
+        contactModel->edge1[0] = EEedge11;
+        contactModel->edge1[1] = EEedge12;
+        contactModel->edge2[0] = EEedge21;
+        contactModel->edge2[1] = EEedge22;
+        contactModel->distance = normEE;
+        dt::drawPoint(contactModel->contactPoint);
     }
     // V-F
     if((normVF <= normEE) && (normVF <= normVE) && (normVF <= normVV)) {
@@ -386,7 +405,30 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
         dt::drawPoint(minPF1);
         dt::drawPoint(minPF2);
         dt::drawLine(minPF1, minPF2);
+
+        contactModel->type = ContactModel::Type::VF;
+        contactModel->edge1[0] = vfEdge1[0];
+        contactModel->edge1[1] = vfEdge1[1];
+        contactModel->edge2[0] = vfEdge2[0];
+        contactModel->edge2[1] = vfEdge2[1];
+        contactModel->edge3[0] = vfEdge3[0];
+        contactModel->edge3[1] = vfEdge3[1];
+        contactModel->contactPoint = 0.5f*(minPF1+minPF2);
+        contactModel->distance = normVF;
     }
 
     return contactModel;
 }
+
+void RigidBody::scale(float scaleFactor)
+{
+    scale(scaleFactor, scaleFactor, scaleFactor);
+}
+
+void RigidBody::scale(float scaleFactorX, float scaleFactorY, float scaleFactorZ)
+{
+    mScaleFactorX = scaleFactorX;
+    mScaleFactorY = scaleFactorY;
+    mScaleFactorZ = scaleFactorZ;
+}
+
