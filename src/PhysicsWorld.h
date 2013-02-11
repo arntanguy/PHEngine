@@ -37,13 +37,17 @@
 class PhysicsWorld
 {
     protected:
-        bool mDebugBoundingVolume;
+        bool mDebugBroadPhase;
+        bool mDebugNarrowPhase;
+
+        void debugBroadPhase(RigidBody *rigidBody);
+        void debugNarrowPhase(RigidBody *rigidBody);
 
     private:
         // Active rigid bodies
         std::vector<RigidBody *> mRigidBodies;
         std::vector<BroadPhaseCollision *> mBroadPhaseCollision;
-        std::unordered_map<RigidBodyPair, AxisCollide> mCollidingPairs;
+        std::unordered_map<RigidBodyPair, RigidBody::CollidingType> mCollidingPairs;
 
     public:
         PhysicsWorld();
@@ -56,6 +60,13 @@ class PhysicsWorld
         void checkCollisions(float minDistance);
         void renderAllRigidBodies(float timestep);
         std::vector<RigidBody *> getRigidBodies() const;
+
+
+        void setDebugAll(bool status = true);
+        void setDebugBroadPhase(bool status = true);
+        void setDebugNarrowPhase(bool status = true);
+        bool getDebugNarrowPhase() const { return mDebugNarrowPhase; }
+        bool getDebugBroadPhase() const { return mDebugBroadPhase; }
 };
 
 

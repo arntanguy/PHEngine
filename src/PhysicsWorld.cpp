@@ -27,7 +27,7 @@ PhysicsWorld::PhysicsWorld()
 {
     addBroadPhaseCollisionHandler(new AABBBroadPhaseCollision(this));
     addBroadPhaseCollisionHandler(new BoundingSphereBroadPhaseCollision(this));
-    mDebugBoundingVolume = true;
+    setDebugAll(false);
 }
 PhysicsWorld::~PhysicsWorld()
 {
@@ -60,7 +60,11 @@ void PhysicsWorld::detectBroadPhaseCollisions()
 
             collidingPairs = (*it)->getCollidingPairs();
             for( cit = collidingPairs.begin() ; cit != collidingPairs.end(); cit++ ) {
-               mCollidingPairs[cit->first] = cit->second;
+                if(cit->second.collide()) {
+                   mCollidingPairs[cit->first] = RigidBody::CollidingType::BROAD_PHASE;
+                } else {
+                   mCollidingPairs[cit->first] = RigidBody::CollidingType::NONE;
+                }
             }
         }
 
@@ -70,7 +74,7 @@ void PhysicsWorld::detectBroadPhaseCollisions()
 void PhysicsWorld::checkCollisions(float minDistance)
 {
     detectBroadPhaseCollisions();
-    std::unordered_map<RigidBodyPair, AxisCollide>::iterator it;
+    std::unordered_map<RigidBodyPair, RigidBody::CollidingType>::iterator it;
     ContactModel *contactModel;
     for( it = mCollidingPairs.begin() ; it != mCollidingPairs.end(); it++ ) {
         RigidBodyPair pair = it->first;
@@ -78,44 +82,76 @@ void PhysicsWorld::checkCollisions(float minDistance)
 
         if(contactModel->distance <= minDistance) {
             std::cout << "Narrow phase collision with distance: " << contactModel->distance << std::endl;
+            it->second = RigidBody::CollidingType::NARROW_PHASE;
         }
     }
 
 }
 
+void PhysicsWorld::debugBroadPhase(RigidBody *rigidBody)
+{
+    if(mDebugBroadPhase) {
+        RigidBody::CollidingType ct = rigidBody->getCollidingType();
+        if(ct == RigidBody::CollidingType::NONE)
+            rigidBody->getBoundingBox()->render(false);
+        else
+            rigidBody->getBoundingBox()->render(true);
+    }
+}
+
+void PhysicsWorld::debugNarrowPhase(RigidBody *rigidBody)
+{
+    if(mDebugNarrowPhase) {
+        RigidBody::CollidingType ct = rigidBody->getCollidingType();
+        if(ct == RigidBody::CollidingType::NARROW_PHASE) {
+            debugBroadPhase(rigidBody);
+            // XXX: do something with narrow phase
+        }
+    }
+}
+
 void PhysicsWorld::renderAllRigidBodies(float timestep)
 {
     // Set debug info
-    std::unordered_map<RigidBodyPair, AxisCollide>::iterator cit = mCollidingPairs.begin();
+    std::unordered_map<RigidBodyPair, RigidBody::CollidingType>::iterator cit = mCollidingPairs.begin();
     for(; cit != mCollidingPairs.end(); cit++) {
-        if(cit->second.collide()) {
-            cit->first.rigidBody1->setCollide(true);
-            cit->first.rigidBody2->setCollide(true);
-            //if(mDebugBoundingVolume) {
-                //cit->first.rigidBody1->getBoundingBox()->render(true);
-                //cit->first.rigidBody2->getBoundingBox()->render(true);
-            //}
-        }
+        cit->first.rigidBody1->setCollide(cit->second);
+        cit->first.rigidBody2->setCollide(cit->second);
     }
 
     // Render
     std::vector<RigidBody *>::iterator it;
     for(it = mRigidBodies.begin(); it != mRigidBodies.end(); it++) {
         (*it)->render(timestep);
-        if(mDebugBoundingVolume) {
-            (*it)->getBoundingBox()->render(false);
-        }
+        debugBroadPhase(*it);
+        debugNarrowPhase(*it);
     }
 
     // Restore debug info
     cit = mCollidingPairs.begin();
     for(; cit != mCollidingPairs.end(); cit++) {
-        cit->first.rigidBody1->setCollide(false);
-        cit->first.rigidBody2->setCollide(false);
+        cit->first.rigidBody1->setCollide(RigidBody::CollidingType::NONE);
+        cit->first.rigidBody2->setCollide(RigidBody::CollidingType::NONE);
     }
 }
 
 std::vector<RigidBody *> PhysicsWorld::getRigidBodies() const
 {
     return mRigidBodies;
+}
+
+void PhysicsWorld::setDebugAll(bool status)
+{
+    mDebugBroadPhase = status;
+    mDebugNarrowPhase = status;
+}
+
+void PhysicsWorld::setDebugBroadPhase(bool status)
+{
+    mDebugBroadPhase = status;
+}
+
+void PhysicsWorld::setDebugNarrowPhase(bool status)
+{
+    mDebugNarrowPhase = status;
 }

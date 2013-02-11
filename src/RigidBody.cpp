@@ -57,7 +57,7 @@ void RigidBody::init()
 
     mBoundingBox = 0;
 
-    setCollide(false);
+    setCollide(CollidingType::NONE);
 }
 
 RigidBody::~RigidBody()
@@ -115,9 +115,6 @@ void RigidBody::render(float ellapsedTime)
         glPopMatrix();
     glPopMatrix();
 
-    if(mBoundingBox != 0) {
-        mBoundingBox->render(mCollide);
-    }
 }
 
 
@@ -156,9 +153,14 @@ void RigidBody::setPosition(const glm::vec3 & position)
     mPosition = position;
 }
 
-void RigidBody::setCollide(bool collide)
+void RigidBody::setCollide(CollidingType collide)
 {
     mCollide = collide;
+}
+
+RigidBody::CollidingType RigidBody::getCollidingType() const
+{
+    return mCollide;
 }
 
 MeshData* RigidBody::getMeshData() const
@@ -328,8 +330,8 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
                         minPF2 = pF;
 
                         vfEdge1[0] = f1; vfEdge1[1] = f2;
-                        vfEdge2[0] = f2; vfEdge2[0] = f3;
-                        vfEdge3[0] = f3; vfEdge3[0] = f1;
+                        vfEdge2[0] = f2; vfEdge2[1] = f3;
+                        vfEdge3[0] = f3; vfEdge3[1] = f1;
                     }
                 }
                 triangle++;
@@ -405,6 +407,9 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
         dt::drawPoint(minPF1);
         dt::drawPoint(minPF2);
         dt::drawLine(minPF1, minPF2);
+        dt::drawLine(vfEdge1[0], vfEdge1[1],glm::vec3(0,0,1), 0.2f, 0.2f, glm::vec3(1.,0., 0.));
+        dt::drawLine(vfEdge2[0], vfEdge2[1],glm::vec3(0,0,1), 0.2f, 0.2f, glm::vec3(1.,0., 0.));
+        dt::drawLine(vfEdge3[0], vfEdge3[1],glm::vec3(0,0,1), 0.2f, 0.2f, glm::vec3(1.,0., 0.));
 
         contactModel->type = ContactModel::Type::VF;
         contactModel->edge1[0] = vfEdge1[0];

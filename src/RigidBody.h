@@ -21,6 +21,7 @@ struct ContactModel
     float distance;
 };
 
+
 /**
  * @brief Represents a rigid body
  * This class provides all the necessary functions to work with rigid bodies:
@@ -42,6 +43,9 @@ struct ContactModel
  ***/
 class RigidBody
 {
+    public:
+        enum CollidingType {BROAD_PHASE, NARROW_PHASE, NONE};
+
     private:
         static int id_counter;
         int id;
@@ -53,7 +57,7 @@ class RigidBody
         float mAngularVelocityNorm;
         float mScaleFactorX, mScaleFactorY, mScaleFactorZ;
 
-        bool mCollide;
+        CollidingType mCollide;
         bool mDebug;
         glm::mat4 mTransformation; // Final transformation
 
@@ -90,7 +94,8 @@ class RigidBody
         BoundingVolume *getBoundingBox() ;
         ContactModel* distanceMeshToMesh(RigidBody *planeRigidBody);
 
-        void setCollide(bool state);
+        void setCollide(CollidingType state);
+        CollidingType getCollidingType() const;
         int getId() const {
             return id;
         }
