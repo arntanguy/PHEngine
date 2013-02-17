@@ -35,9 +35,10 @@ RigidBody::RigidBody()
     init();
 }
 
-RigidBody::RigidBody(Entity *mEntity, const float mass) : mMass(mass)
+RigidBody::RigidBody(Entity *mEntity, const float mass)
 {
     init();
+    setMass(mass);
     setEntity(mEntity);
 }
 
@@ -45,7 +46,8 @@ void RigidBody::init()
 {
     id = id_counter++;
     mRotation = glm::mat4(1.f);
-    mMass = 1.;
+    mInverseInertialTensor = glm::mat4(1.f);
+    setMass(0.0);
     //mLinearMomentum = glm::vec3(0.01, 0.01, 0.);
     mPosition = glm::vec3(0.f,0.f,0.f);
     mLinearMomentum = glm::vec3(0.f);
@@ -69,7 +71,8 @@ RigidBody::~RigidBody()
  **/
 void RigidBody::update(float ellapsedTime)
 {
-    mPosition = mPosition + mLinearMomentum/mMass * ellapsedTime;
+    if(mInvMass > 0)
+        mPosition = mPosition + mLinearMomentum / mInvMass * ellapsedTime;
     if(mAngularVelocityNorm != 0) {
         mRotation *= rotationMatrix(mAngularVelocity, glm::length2(mAngularVelocity));
     } else {
@@ -79,6 +82,10 @@ void RigidBody::update(float ellapsedTime)
 
     // Transformation = rotation followed by translation
     mTransformation *= glm::translate(mPosition.x, mPosition.y, mPosition.z) * mRotation ;
+
+    if(mInvMass != 0) {
+        mLinearMomentum.y -= ellapsedTime * .001f/mInvMass;
+    }
 
     if(mBoundingBox != 0)
     {
@@ -145,8 +152,48 @@ void RigidBody::setEntity(Entity *entity) {
     e = dynamic_cast<AssimpMeshEntity *>(entity);
     if(e != 0) {
         mMeshData = e->toMeshData();
+        approximateIntertialTensor();
     }
 }
+
+/**
+ * @brief If MeshData is correctly set, approximate intertial tensor,
+ * assuming a uniformally distributed mass.
+ */
+void RigidBody::approximateIntertialTensor()
+{
+    if(mMeshData != 0) {
+        if(mInvMass == 0) {
+            mInverseInertialTensor = glm::mat4(0.f);
+        } else {
+            float mi = (1.f/mInvMass) / mMeshData->mVertices.size();
+            glm::vec3 ri;
+            std::vector<glm::vec3>::iterator it;
+            glm::mat4 inertialTensor;
+            for( it = mMeshData->mVertices.begin() ; it != mMeshData->mVertices.end(); it++ ) {
+                ri = *it;
+
+                // row 1
+                inertialTensor[0][0] +=  mi * (ri.y*ri.y + ri.z*ri.z);
+                inertialTensor[0][1] += -mi * ri.x * ri.y;
+                inertialTensor[0][2] += -mi * ri.x * ri.z;
+
+                // row 2
+                inertialTensor[1][0] += -mi * ri.y * ri.z;
+                inertialTensor[1][1] +=  mi * (ri.x*ri.x + ri.z*ri.z);
+                inertialTensor[1][2] += -mi * ri.y * ri.z;
+
+                // row 3
+                inertialTensor[2][0] += -mi * ri.z * ri.x;
+                inertialTensor[2][1] += -mi * ri.z * ri.y;
+                inertialTensor[2][1] +=  mi * (ri.x*ri.x + ri.y*ri.y);
+
+            }
+            mInverseInertialTensor = glm::inverse(inertialTensor);
+        }
+    }
+}
+
 
 void RigidBody::setPosition(const glm::vec3 & position)
 {
@@ -204,6 +251,7 @@ BoundingVolume* RigidBody::getBoundingBox()
  */
 ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
 {
+    glDisable(GL_LIGHTING);
     MeshData *data = getTransformedMeshData();
     std::vector<glm::vec3>::iterator it = data->mVertices.begin();
     MeshData *otherMeshData = otherRigidBody->getTransformedMeshData();
@@ -348,6 +396,8 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
         eov = glm::normalize(eo2 - eo1);
     }
     ContactModel *contactModel = new ContactModel();
+    contactModel->rigidBody1 = this;
+    contactModel->rigidBody2 = otherRigidBody;
 
     //std::cout << "dist V-V: " << normVV << std::endl;
     //std::cout << "dist V-E: " << normVE << std::endl;
@@ -371,7 +421,7 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
     if((normVE <= normVV) && (normVE <= normEE) && (normVE <= normVF)) {
         //std::cout << "VE" <<std::endl;
         dt::drawPoint(minProjectionOnEdge, 0.2, glm::vec3(1., 1., 0.));
-        dt::drawPoint(pointEdge, 0.2, glm::vec3(1., 1., 0.));
+        dt::drawPoint(pointEdge);
         dt::drawLine(edge1, minProjectionOnEdge);
         dt::drawLine(edge2, minProjectionOnEdge);
         dt::drawLine(edge2, edge1,glm::vec3(0,0,1), 0.2f, 0.2f, glm::vec3(1.,0., 0.));
@@ -405,7 +455,7 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
     if((normVF <= normEE) && (normVF <= normVE) && (normVF <= normVV)) {
         //std::cout << "VF" <<std::endl;
         dt::drawPoint(minPF1);
-        dt::drawPoint(minPF2);
+        dt::drawPoint(minPF2, 0.2, glm::vec3(0.,1.,0.));
         dt::drawLine(minPF1, minPF2);
         dt::drawLine(vfEdge1[0], vfEdge1[1],glm::vec3(0,0,1), 0.2f, 0.2f, glm::vec3(1.,0., 0.));
         dt::drawLine(vfEdge2[0], vfEdge2[1],glm::vec3(0,0,1), 0.2f, 0.2f, glm::vec3(1.,0., 0.));
@@ -419,10 +469,16 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
         contactModel->edge3[0] = vfEdge3[0];
         contactModel->edge3[1] = vfEdge3[1];
         contactModel->contactPoint = 0.5f*(minPF1+minPF2);
+        if(normVF < 0) {
+            std::cout << "negative norm" << std::endl;
+        } else {
+            std::cout << "positive norm" << std::endl;
+        }
         contactModel->distance = normVF;
     }
 
     return contactModel;
+    glEnable(GL_LIGHTING);
 }
 
 void RigidBody::scale(float scaleFactor)
@@ -435,5 +491,21 @@ void RigidBody::scale(float scaleFactorX, float scaleFactorY, float scaleFactorZ
     mScaleFactorX = scaleFactorX;
     mScaleFactorY = scaleFactorY;
     mScaleFactorZ = scaleFactorZ;
+}
+
+void RigidBody::setMass(float mass)
+{
+    if( mass != 0 )
+        mInvMass = 1.f/mass;
+    else
+        mInvMass = 0.f;
+}
+
+void RigidBody::updateFromImpulse(glm::vec3 J)
+{
+    mLinearMomentum += J * mInvMass;
+    std::cout << "mLinearMomentum:" << " ( " << mLinearMomentum.x << ", " << mLinearMomentum.y << ", " << mLinearMomentum.z << " )" << std::endl;
+
+
 }
 

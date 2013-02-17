@@ -16,9 +16,9 @@
 * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 *
  ******************************************************************************/
 
+#include "RigidBody.h"
 #include "AABoundingBox.h"
 #include "MeshData.h"
-#include "RigidBody.h"
 #include <vector>
 #include "mt.h"
 

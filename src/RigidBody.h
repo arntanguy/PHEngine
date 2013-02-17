@@ -19,6 +19,9 @@ struct ContactModel
     glm::vec3 edge2[2];
     glm::vec3 edge3[2];
     float distance;
+
+    RigidBody *rigidBody1;
+    RigidBody *rigidBody2;
 };
 
 
@@ -46,23 +49,26 @@ class RigidBody
     public:
         enum CollidingType {BROAD_PHASE, NARROW_PHASE, NONE};
 
-    private:
-        static int id_counter;
-        int id;
-        float mMass;
+    protected:
         glm::vec3 mPosition;
         glm::mat4 mRotation;
+        glm::mat4 mInverseInertialTensor;
         glm::vec3 mLinearMomentum; // P(t) = v(t)*m
         glm::vec3 mAngularVelocity; // w(t) = {wx, wy, wz}. Magnitude encodes speed of the spin
         float mAngularVelocityNorm;
         float mScaleFactorX, mScaleFactorY, mScaleFactorZ;
 
+
+    private:
+        static int id_counter;
+        int id;
+        float mInvMass;
         CollidingType mCollide;
         bool mDebug;
         glm::mat4 mTransformation; // Final transformation
 
 
-        //glm::vec3 mIntertialTensor; // I(t)
+        //glm::vec3 mInverseInertialTensor; // I(t)
         //glm::vec3 mAngularMomentum; // L(t) = I(t)*w(t)
 
         Entity *mEntity; // attached graphic entity to which physics apply
@@ -72,6 +78,8 @@ class RigidBody
         void init();
         void update(float ellapsedTime);
         glm::mat4 rotationMatrix(glm::vec3 axis, float angle);
+
+        void approximateIntertialTensor();
 
     public:
         RigidBody();
@@ -86,6 +94,7 @@ class RigidBody
         void setEntity(Entity *entity);
         void setAngularVelocity(const glm::vec3& direction, float magnitude);
         void setLinearMomentum(const glm::vec3 &linearMomentum);
+        void setMass(float mass);
         void rotate(const glm::vec3& direction, float angle);
         void scale(float scaleFactor);
         void scale(float scaleFactorX, float scaleFactorY, float scaleFactorZ);
@@ -108,8 +117,32 @@ class RigidBody
         {
             return mPosition;
         }
+        glm::vec3 getLinearVelocity() const
+        {
+            return mLinearMomentum;
+        }
+        glm::vec3 getAngularVelocity() const
+        {
+            return mAngularVelocityNorm * mAngularVelocity;
+        }
+        glm::mat4 getInverseInertialTensor() const
+        {
+            return mInverseInertialTensor;
+        }
+        float getInvMass() const
+        {
+            return mInvMass;
+        }
+        glm::vec3 getCenterOfMass() const
+        {
+            if(mMeshData != 0)
+                return mMeshData->center;
+            else
+                return glm::vec3();
+        }
         MeshData *getMeshData() const;
         MeshData* getTransformedMeshData() const;
+        void updateFromImpulse(glm::vec3 J);
 };
 
 #endif

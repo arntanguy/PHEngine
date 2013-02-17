@@ -22,6 +22,7 @@
 #include "AABBBroadPhaseCollision.h"
 #include "BoundingSphereBroadPhaseCollision.h"
 #include <algorithm>
+#include "mt.h"
 
 PhysicsWorld::PhysicsWorld()
 {
@@ -81,11 +82,75 @@ void PhysicsWorld::checkCollisions(float minDistance)
         contactModel = pair.rigidBody1->distanceMeshToMesh(pair.rigidBody2);
 
         if(contactModel->distance <= minDistance) {
-            std::cout << "Narrow phase collision with distance: " << contactModel->distance << std::endl;
+            //std::cout << "Narrow phase collision with distance: " << contactModel->distance << std::endl;
             it->second = RigidBody::CollidingType::NARROW_PHASE;
         }
     }
+}
 
+void PhysicsWorld::reactToCollision(ContactModel *contact)
+{
+    if(glm::dot(contact->contactPoint-contact->normal, contact->normal) >= 0) {
+        std::cout << "above" << std::endl;
+    } else {
+        std::cout << "below" << std::endl;
+    }
+    return;
+    //glm::vec3 n = contact->normal;
+    glm::vec3 n(0, 1, 0);
+
+    float epsilon = 1.f;
+    glm::vec3 va = contact->rigidBody1->getLinearVelocity();
+    glm::vec3 vb = contact->rigidBody2->getLinearVelocity();
+    float vrel = glm::dot(n, va-vb);
+
+    std::cout << "epsilon: " << epsilon << std::endl;
+    std::cout << "va:" << " ( " << va.x << ", " << va.y << ", " << va.z << " )" << std::endl;
+    std::cout << "vb:" << " ( " << vb.x << ", " << vb.y << ", " << vb.z << " )" << std::endl;
+    std::cout << "vrel: " << vrel << std::endl;
+
+    float N = -(1.f+epsilon) * vrel;
+    std::cout << "N:" << " " << N << std::endl;
+
+    float t1 = contact->rigidBody1->getInvMass();
+    float t2 = contact->rigidBody2->getInvMass();
+    std::cout << "t1 (= 1/m1): " << t1 << std::endl;
+    std::cout << "t2 (= 1/m2): " << t2 << std::endl;
+
+    glm::mat4 IbodyAInv = contact->rigidBody1->getInverseInertialTensor();
+    glm::mat4 IbodyBInv = contact->rigidBody2->getInverseInertialTensor();
+
+
+    glm::mat4 Ra = contact->rigidBody1->getRotation();
+    glm::mat4 Rb = contact->rigidBody2->getRotation();
+    glm::mat4 RaT = glm::transpose(Ra);
+    glm::mat4 RbT = glm::transpose(Rb);
+
+    glm::mat4 IaInv = Ra * IbodyAInv * RaT;
+    glm::mat4 IbInv = Rb * IbodyBInv * RbT;
+
+    glm::vec3 ra = contact->rigidBody1->getCenterOfMass() - contact->contactPoint;
+    glm::vec3 rb = contact->rigidBody2->getCenterOfMass() - contact->contactPoint;
+
+    glm::vec3 cross1 = glm::cross(ra, n);
+    glm::vec3 cross2 = glm::cross( glm::vec3(IaInv * glm::vec4(cross1, 0.)), ra);
+    float t3 = glm::dot( n, glm::cross( cross2, ra ) );
+    cross1 = glm::cross(rb, n);
+    cross2 = glm::cross( glm::vec3(IbInv * glm::vec4(cross1, 0.)), rb);
+    float t4 = glm::dot( n, glm::cross( cross2, rb ) );
+
+    float j = N / (t1 + t2 + t3 + t4);
+    std::cout << "j: " << j << std::endl;
+
+    glm::vec3 J = j * n;
+    std::cout << "J:" << " ( " << J.x << ", " << J.y << ", " << J.z << " )" << std::endl;
+
+
+
+    contact->rigidBody1->updateFromImpulse(J);
+    contact->rigidBody2->updateFromImpulse(J);
+
+    std::cout << "\n\n";
 }
 
 void PhysicsWorld::debugBroadPhase(RigidBody *rigidBody)

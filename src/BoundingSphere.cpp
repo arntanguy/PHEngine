@@ -17,11 +17,11 @@
  ******************************************************************************/
 
 #include "mt.h"
-#include <GL/glut.h>
 #include "BoundingSphere.h"
 #include <vector>
 #include "MeshData.h"
 #include "RigidBody.h"
+#include <GL/glut.h>
 
 BoundingSphere::BoundingSphere(RigidBody *parent) : BoundingVolume(parent)
 {

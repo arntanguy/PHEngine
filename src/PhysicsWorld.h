@@ -58,6 +58,7 @@ class PhysicsWorld
 
         void detectBroadPhaseCollisions();
         void checkCollisions(float minDistance);
+        void reactToCollision(ContactModel *contact);
         void renderAllRigidBodies(float timestep);
         std::vector<RigidBody *> getRigidBodies() const;
 

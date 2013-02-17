@@ -71,7 +71,7 @@ float Triangle::closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, boo
     /**
      * Check closest point on triangle, using voronoi regions
      **/
-    std::cout << "point: " << point.x << " " << point.y << " " << point.z << std::endl;
+    //std::cout << "point: " << point.x << " " << point.y << " " << point.z << std::endl;
     bool inEdgeRegion = false;
     glm::vec3 bestPoint;
 
@@ -154,7 +154,7 @@ float Triangle::closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, boo
             /**
              * We're inside the triangle => orthogonal projection on triangle surface
              **/
-            std::cout << "Project onto plane..." << std::endl;
+            //std::cout << "Project onto plane..." << std::endl;
             bestPoint = point - (glm::dot(point, mNormal)) * mNormal;
         }
         i++;
@@ -174,6 +174,6 @@ float Triangle::closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, boo
         }
     }
 
-    std::cout << "distance: " << mt::norm(point-bestPoint) << std::endl;
+    //std::cout << "distance: " << mt::norm(point-bestPoint) << std::endl;
     return mt::norm(point-bestPoint);
 }
