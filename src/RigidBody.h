@@ -14,6 +14,8 @@ struct ContactModel
     enum Type {VV, VE, EE, VF};
     Type type;
     glm::vec3 contactPoint;
+    glm::vec3 contactPoint1;
+    glm::vec3 contactPoint2;
     glm::vec3 normal;
     glm::vec3 edge1[2];
     glm::vec3 edge2[2];
@@ -22,6 +24,7 @@ struct ContactModel
 
     RigidBody *rigidBody1;
     RigidBody *rigidBody2;
+    bool contactHappened;
 };
 
 
@@ -142,7 +145,7 @@ class RigidBody
         }
         MeshData *getMeshData() const;
         MeshData* getTransformedMeshData() const;
-        void updateFromImpulse(glm::vec3 J);
+        void updateFromImpulse(glm::vec3 J, glm::vec3 omega);
 };
 
 #endif

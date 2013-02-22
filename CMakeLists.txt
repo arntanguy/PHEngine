@@ -10,7 +10,6 @@ set(LIB_TYPE SHARED) # STATIC or SHARED
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 set(CMAKE_CSS_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 
-set (CMAKE_CXX_FLAGS -std=gnu++0x)
 
 project(${PROJECT_NAME})
 cmake_minimum_required(VERSION 2.6)
@@ -22,6 +21,9 @@ find_package(OpenGL REQUIRED)
 find_package(SFML COMPONENTS system window network audio graphics REQUIRED)
 find_package(ASSIMP REQUIRED)
 find_package(CGEngine REQUIRED)
+find_package(OpenMP REQUIRED)
+
+set (CMAKE_CXX_FLAGS "-std=gnu++0x ${OpenMP_CXX_FLAGS}")
 
 
 # Set all debug and info messages on
@@ -46,7 +48,7 @@ include_directories (${SRC_DIR} ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ${ASSI
 
 ### CREATE LIBRARY
 add_library(${PROJECT_NAME} ${LIB_TYPE} ${SOURCES})
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLUT_LIBRARIES} ${SFML_LIBRARIES} ${ASSIMP_LIBRARIES} ${CGENGINE_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLUT_LIBRARIES} ${SFML_LIBRARIES} ${ASSIMP_LIBRARIES} ${CGENGINE_LIBRARIES} ${OPENMP_LIBRARIES})
 
 
 

@@ -1,19 +1,19 @@
 /******************************************************************************
-     Copyright (C) 2012  TANGUY Arnaud arn.tanguy@gmail.com
-*                                                                             *
-* This program is free software; you can redistribute it and/or modify        *
-* it under the terms of the GNU General Public License as published by        *
-* the Free Software Foundation; either version 2 of the License, or           *
-* (at your option) any later version.                                         *
-*                                                                             *
-* This program is distributed in the hope that it will be useful,             *
-* but WITHOUT ANY WARRANTY; without even the implied warranty of              *
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                *
-* GNU General Public License for more details.                                *
-*                                                                             *
-* You should have received a copy of the GNU General Public License along     *
-* with this program; if not, write to the Free Software Foundation, Inc.,     *
-* 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 *
+  Copyright (C) 2012  TANGUY Arnaud arn.tanguy@gmail.com
+ *                                                                             *
+ * This program is free software; you can redistribute it and/or modify        *
+ * it under the terms of the GNU General Public License as published by        *
+ * the Free Software Foundation; either version 2 of the License, or           *
+ * (at your option) any later version.                                         *
+ *                                                                             *
+ * This program is distributed in the hope that it will be useful,             *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of              *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                *
+ * GNU General Public License for more details.                                *
+ *                                                                             *
+ * You should have received a copy of the GNU General Public License along     *
+ * with this program; if not, write to the Free Software Foundation, Inc.,     *
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 *
  ******************************************************************************/
 
 #include "RigidBody.h"
@@ -26,6 +26,7 @@
 #include "DrawingTools.h"
 #include <limits.h> // For max size of numbers
 #include "Triangle.h"
+#include <omp.h>
 
 
 int RigidBody::id_counter = 0;
@@ -83,9 +84,9 @@ void RigidBody::update(float ellapsedTime)
     // Transformation = rotation followed by translation
     mTransformation *= glm::translate(mPosition.x, mPosition.y, mPosition.z) * mRotation ;
 
-    if(mInvMass != 0) {
-        mLinearMomentum.y -= ellapsedTime * .001f/mInvMass;
-    }
+    //if(mInvMass != 0) {
+    //mLinearMomentum.y -= ellapsedTime * .01f/mInvMass;
+    //}
 
     if(mBoundingBox != 0)
     {
@@ -114,12 +115,12 @@ void RigidBody::render(float ellapsedTime)
     GLfloat *mat;
     mat = glm::value_ptr(mTransformation);
     glPushMatrix();
-        // Multiply current stack by matrix
-        glMultMatrixf(mat);
-        glPushMatrix();
-        glScalef(mScaleFactorX, mScaleFactorY, mScaleFactorZ);
-        mEntity->render();
-        glPopMatrix();
+    // Multiply current stack by matrix
+    glMultMatrixf(mat);
+    glPushMatrix();
+    glScalef(mScaleFactorX, mScaleFactorY, mScaleFactorZ);
+    mEntity->render();
+    glPopMatrix();
     glPopMatrix();
 
 }
@@ -255,7 +256,7 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
     MeshData *data = getTransformedMeshData();
     std::vector<glm::vec3>::iterator it = data->mVertices.begin();
     MeshData *otherMeshData = otherRigidBody->getTransformedMeshData();
-    std::vector<glm::vec3>::iterator otherIt = otherMeshData->mVertices.begin();
+
 
     // For minimum
     float normVV = FLT_MAX;
@@ -295,6 +296,7 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
     int triangle = 0;
     for(it=data->mVertices.begin() ; it != data->mVertices.end(); it++ ) {
         triangle = 0;
+        std::vector<glm::vec3>::iterator otherIt = otherMeshData->mVertices.begin();
         for(otherIt = otherMeshData->mVertices.begin(); otherIt != otherMeshData->mVertices.end(); otherIt++ ) {
             // Vertex-Vertex
             // Straight computation of norm between vertices
@@ -327,10 +329,8 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
 
 
             // Edge-Edge
-            /*
-             * - Minimal projection of edge onto another edge (pE1)
-             * - Then project this point onto other edge (pE2)
-             */
+            //- Minimal projection of edge onto another edge (pE1)
+            //- Then project this point onto other edge (pE2)
             float k = glm::dot(ev, eov);
             glm::vec3 pE1 = e1 + (glm::dot(eo1-e1, ev-k*eov) * ev);
             if(mt::onEdge(pE1, e1, e2)) {
@@ -352,10 +352,7 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
                 }
             }
 
-
-            /*
-             * Vertex-Face
-             */
+            //Vertex-Face
             // 3 vertices of the triangle
             glm::vec3 f1, f2, f3;
             glm::vec3 pF;
@@ -384,7 +381,6 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
                 }
                 triangle++;
             }
-
             // next edge of other object
             e1 = e2;
             e2 = (*otherIt);
@@ -396,6 +392,7 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
         eov = glm::normalize(eo2 - eo1);
     }
     ContactModel *contactModel = new ContactModel();
+    contactModel->contactHappened = false;
     contactModel->rigidBody1 = this;
     contactModel->rigidBody2 = otherRigidBody;
 
@@ -449,6 +446,8 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
         contactModel->edge2[0] = EEedge21;
         contactModel->edge2[1] = EEedge22;
         contactModel->distance = normEE;
+        // XXX: Check if this is the right normal
+        contactModel->normal = glm::normalize(pointEdge-minPE1);
         dt::drawPoint(contactModel->contactPoint);
     }
     // V-F
@@ -468,44 +467,50 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
         contactModel->edge2[1] = vfEdge2[1];
         contactModel->edge3[0] = vfEdge3[0];
         contactModel->edge3[1] = vfEdge3[1];
+        contactModel->contactPoint1 = minPF1;
+        contactModel->contactPoint2 = minPF2;
         contactModel->contactPoint = 0.5f*(minPF1+minPF2);
-        if(normVF < 0) {
-            std::cout << "negative norm" << std::endl;
-        } else {
-            std::cout << "positive norm" << std::endl;
-        }
         contactModel->distance = normVF;
+        contactModel->normal = glm::normalize(minPF2-minPF1);
     }
 
     return contactModel;
     glEnable(GL_LIGHTING);
-}
+    }
 
-void RigidBody::scale(float scaleFactor)
-{
-    scale(scaleFactor, scaleFactor, scaleFactor);
-}
+    void RigidBody::scale(float scaleFactor)
+    {
+        scale(scaleFactor, scaleFactor, scaleFactor);
+    }
 
-void RigidBody::scale(float scaleFactorX, float scaleFactorY, float scaleFactorZ)
-{
-    mScaleFactorX = scaleFactorX;
-    mScaleFactorY = scaleFactorY;
-    mScaleFactorZ = scaleFactorZ;
-}
+    void RigidBody::scale(float scaleFactorX, float scaleFactorY, float scaleFactorZ)
+    {
+        mScaleFactorX = scaleFactorX;
+        mScaleFactorY = scaleFactorY;
+        mScaleFactorZ = scaleFactorZ;
+    }
 
-void RigidBody::setMass(float mass)
-{
-    if( mass != 0 )
-        mInvMass = 1.f/mass;
-    else
-        mInvMass = 0.f;
-}
+    void RigidBody::setMass(float mass)
+    {
+        if( mass != 0 )
+            mInvMass = 1.f/mass;
+        else
+            mInvMass = 0.f;
+    }
 
-void RigidBody::updateFromImpulse(glm::vec3 J)
-{
-    mLinearMomentum += J * mInvMass;
-    std::cout << "mLinearMomentum:" << " ( " << mLinearMomentum.x << ", " << mLinearMomentum.y << ", " << mLinearMomentum.z << " )" << std::endl;
+    void RigidBody::updateFromImpulse(glm::vec3 J, glm::vec3 omega)
+    {
+        //static bool truc = true;
+        //if(truc) {
+        //mLinearMomentum.y = -mLinearMomentum.y;
+        //truc = false;
+        //}
+        mLinearMomentum += J * mInvMass;
+        std::cout << "mLinearMomentum:" << " ( " << mLinearMomentum.x << ", " << mLinearMomentum.y << ", " << mLinearMomentum.z << " )" << std::endl;
 
-
-}
+        glm::vec3 angularVelocity = mAngularVelocityNorm * mAngularVelocity;
+        angularVelocity += omega;
+        mAngularVelocityNorm = mt::norm(angularVelocity);
+        mAngularVelocity = glm::normalize(angularVelocity);
+    }
 

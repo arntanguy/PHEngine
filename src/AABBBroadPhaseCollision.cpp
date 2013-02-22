@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <set>
 #include <vector>
+#include <omp.h>
 
 AABBBroadPhaseCollision::AABBBroadPhaseCollision(PhysicsWorld *phWorld) : BroadPhaseCollision(phWorld)
 {
@@ -31,6 +32,7 @@ AABBBroadPhaseCollision::~AABBBroadPhaseCollision()
 
 void AABBBroadPhaseCollision::update()
 {
+    omp_set_num_threads(4);
     //dinf << "PhysicsWorld::AABBBroadPhase()" << std::endl;
 
     // Clear all colliding pairs
@@ -54,9 +56,21 @@ void AABBBroadPhaseCollision::update()
         if(boundingBox != 0) {
             min = boundingBox->getMin();
             max = boundingBox->getMax();
+#pragma omp parallel sections
+            {
+#pragma omp section
+{
             sortedList[0].insert(AABBComp(*it, min.x, max.x));
+}
+#pragma omp section
+{
             sortedList[1].insert(AABBComp(*it, min.y, max.y));
+}
+#pragma omp section
+{
             sortedList[2].insert(AABBComp(*it, min.z, max.z));
+}
+}
         }
     }
 
@@ -77,9 +91,9 @@ void AABBBroadPhaseCollision::update()
             //std::cout << sss->min << " " << sss->max << std::endl;
         //}
         //dinf << "End sorted list\n\n";
+        sortedListIt = sortedList[axis].begin();
         for(sortedListIt = sortedList[axis].begin(); sortedListIt != sortedList[axis].end(); sortedListIt++) {
-
-            // Pedicate min
+/*            // Pedicate min*/
             RemoveFromActiveList p(sortedListIt->min);
             activeList[axis].erase(std::remove_if(activeList[axis].begin(), activeList[axis].end(), p ), activeList[axis].end());
             activeList[axis].push_back(*sortedListIt);
@@ -113,6 +127,7 @@ void AABBBroadPhaseCollision::update()
                     }
                 }
             }
+            /*sortedListIt++;*/
         }
     }
 

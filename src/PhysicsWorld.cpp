@@ -75,34 +75,33 @@ void PhysicsWorld::detectBroadPhaseCollisions()
 void PhysicsWorld::checkCollisions(float minDistance)
 {
     detectBroadPhaseCollisions();
+    std::cout << "Check amongst " << mCollidingPairs.size() << " objects" << std::endl;
     std::unordered_map<RigidBodyPair, RigidBody::CollidingType>::iterator it;
     ContactModel *contactModel;
     for( it = mCollidingPairs.begin() ; it != mCollidingPairs.end(); it++ ) {
         RigidBodyPair pair = it->first;
+        std::cout << "Rigid model for object " << pair.rigidBody1->getId() << " and " << pair.rigidBody2->getId() << std::endl;
         contactModel = pair.rigidBody1->distanceMeshToMesh(pair.rigidBody2);
 
-        if(contactModel->distance <= minDistance) {
-            //std::cout << "Narrow phase collision with distance: " << contactModel->distance << std::endl;
-            it->second = RigidBody::CollidingType::NARROW_PHASE;
-        }
+        //if(contactModel->distance <= minDistance) {
+            ////std::cout << "Narrow phase collision with distance: " << contactModel->distance << std::endl;
+            //it->second = RigidBody::CollidingType::NARROW_PHASE;
+        //}
     }
 }
 
 void PhysicsWorld::reactToCollision(ContactModel *contact)
 {
-    if(glm::dot(contact->contactPoint-contact->normal, contact->normal) >= 0) {
-        std::cout << "above" << std::endl;
-    } else {
-        std::cout << "below" << std::endl;
-    }
-    return;
-    //glm::vec3 n = contact->normal;
-    glm::vec3 n(0, 1, 0);
+    glm::vec3 n = contact->normal;
+    std::cout << "n:" << " ( " << n.x << ", " << n.y << ", " << n.z << " )" << std::endl;
+
+
+    //glm::vec3 n(0, 1, 0);
 
     float epsilon = 1.f;
     glm::vec3 va = contact->rigidBody1->getLinearVelocity();
     glm::vec3 vb = contact->rigidBody2->getLinearVelocity();
-    float vrel = glm::dot(n, va-vb);
+    float vrel = /*mt::norm(va-vb); */ glm::dot(n, va-vb);
 
     std::cout << "epsilon: " << epsilon << std::endl;
     std::cout << "va:" << " ( " << va.x << ", " << va.y << ", " << va.z << " )" << std::endl;
@@ -129,8 +128,24 @@ void PhysicsWorld::reactToCollision(ContactModel *contact)
     glm::mat4 IaInv = Ra * IbodyAInv * RaT;
     glm::mat4 IbInv = Rb * IbodyBInv * RbT;
 
-    glm::vec3 ra = contact->rigidBody1->getCenterOfMass() - contact->contactPoint;
-    glm::vec3 rb = contact->rigidBody2->getCenterOfMass() - contact->contactPoint;
+    std::cout << "IaInv : " << std::endl
+	<< "\t" << IaInv[0][0] << ", " << IaInv[0][1] << ", " << IaInv[0][2] << std::endl
+	<< "\t" << IaInv[1][0] << ", " << IaInv[1][1] << ", " << IaInv[1][2] << std::endl
+	<< "\t" << IaInv[2][0] << ", " << IaInv[2][1] << ", " << IaInv[2][2] << std::endl;
+    std::cout << "IbInv : " << std::endl
+	<< "\t" << IbInv[0][0] << ", " << IbInv[0][1] << ", " << IbInv[0][2] << std::endl
+	<< "\t" << IbInv[1][0] << ", " << IbInv[1][1] << ", " << IbInv[1][2] << std::endl
+	<< "\t" << IbInv[2][0] << ", " << IbInv[2][1] << ", " << IbInv[2][2] << std::endl;
+
+    // XXX: Use contact point 1 and 2 instead
+    glm::vec3 ra = contact->contactPoint - (contact->rigidBody1->getPosition() + contact->rigidBody1->getCenterOfMass());
+    glm::vec3 rb = contact->contactPoint - (contact->rigidBody2->getPosition() + contact->rigidBody2->getCenterOfMass());
+    std::cout << "ra:" << " ( " << ra.x << ", " << ra.y << ", " << ra.z << " )" << std::endl;
+    std::cout << "rb:" << " ( " << rb.x << ", " << rb.y << ", " << rb.z << " )" << std::endl;
+
+
+
+
 
     glm::vec3 cross1 = glm::cross(ra, n);
     glm::vec3 cross2 = glm::cross( glm::vec3(IaInv * glm::vec4(cross1, 0.)), ra);
@@ -145,10 +160,14 @@ void PhysicsWorld::reactToCollision(ContactModel *contact)
     glm::vec3 J = j * n;
     std::cout << "J:" << " ( " << J.x << ", " << J.y << ", " << J.z << " )" << std::endl;
 
+    glm::vec3 omegaA = glm::vec3( IaInv * glm::vec4(glm::cross(ra, J), 0.f) );
+    glm::vec3 omegaB = glm::vec3( IbInv * glm::vec4(glm::cross(rb, J), 0.f) );
+    std::cout << "omegaA:" << " ( " << omegaA.x << ", " << omegaA.y << ", " << omegaA.z << " )" << std::endl;
+    std::cout << "omegaB:" << " ( " << omegaB.x << ", " << omegaB.y << ", " << omegaB.z << " )" << std::endl;
 
 
-    contact->rigidBody1->updateFromImpulse(J);
-    contact->rigidBody2->updateFromImpulse(J);
+    contact->rigidBody1->updateFromImpulse(J, omegaA);
+    contact->rigidBody2->updateFromImpulse(J, omegaB);
 
     std::cout << "\n\n";
 }
