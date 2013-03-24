@@ -43,6 +43,10 @@ ${SRC_DIR}/AABBBroadPhaseCollision.cpp
 ${SRC_DIR}/BoundingSphereBroadPhaseCollision.cpp
 ${SRC_DIR}/Triangle.cpp
 ${SRC_DIR}/mt.cpp
+${SRC_DIR}/FluidSimulation.cpp
+${SRC_DIR}/Cell.cpp
+${SRC_DIR}/Pipe.cpp
+${SRC_DIR}/Grid.cpp
 )
 
 include_directories (${SRC_DIR} ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ${ASSIMP_INCLUDE_DIRS} ${INCLUDE_DIR} ${CGENGINE_INCLUDE_DIRS})

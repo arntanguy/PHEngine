@@ -23,6 +23,7 @@
 #include "BoundingSphereBroadPhaseCollision.h"
 #include <algorithm>
 #include "mt.h"
+#include "FluidSimulation.h"
 
 using namespace std;
 
@@ -93,6 +94,25 @@ void PhysicsWorld::checkCollisions(float minDistance) {
 				it->second = RigidBody::CollidingType::NARROW_PHASE;
 				reactToCollision(contactModel);
 			}
+		}
+
+		FluidSimulation *fluid = 0;
+		RigidBody *rigidBody = 0;
+		if(rigidBody1 != 0) {
+			FluidSimulation *f = dynamic_cast<FluidSimulation *>(pair.rigidBody2);
+			if(f != 0) {
+				rigidBody = rigidBody1;
+				fluid = f;
+			}
+		} else if(rigidBody2 != 0) {
+			FluidSimulation *f = dynamic_cast<FluidSimulation *>(pair.rigidBody2);
+			if(f != 0) {
+				rigidBody = rigidBody2;
+				fluid = f;
+			}
+		}
+		if(fluid != 0 && rigidBody != 0) {
+
 		}
 
 	}
