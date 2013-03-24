@@ -22,7 +22,7 @@
 #include <unordered_map>
 #include <vector>
 #include <list>
-#include "RigidBody.h"
+#include "PhysicsBody.h"
 
 class PhysicsWorld;
 
@@ -33,10 +33,10 @@ class PhysicsWorld;
 struct AABBComp
 {
     float min, max;
-    RigidBody *rigidBody;
+    PhysicsBody *rigidBody;
 
     AABBComp() { }
-    AABBComp(RigidBody *rigidBody, float min, float max) {
+    AABBComp(PhysicsBody *rigidBody, float min, float max) {
         this->min = min;
         this->max = max;
         this->rigidBody = rigidBody;
@@ -112,10 +112,10 @@ struct AxisCollide
  */
 struct RigidBodyPair
 {
-    RigidBody *rigidBody1;
-    RigidBody *rigidBody2;
+    PhysicsBody *rigidBody1;
+    PhysicsBody *rigidBody2;
 
-    RigidBodyPair(RigidBody *r1, RigidBody *r2) {
+    RigidBodyPair(PhysicsBody *r1, PhysicsBody *r2) {
         rigidBody1 = r1;
         rigidBody2 = r2;
     }
@@ -147,13 +147,12 @@ namespace std {
 class BroadPhaseCollision
 {
     protected:
-        //std::vector<RigidBody *> mRigidBodies;
         PhysicsWorld *mPhysicsWorld;
         std::unordered_map<RigidBodyPair, AxisCollide> mCollidingPairs;
 
     public:
         BroadPhaseCollision(PhysicsWorld *phWorld);
-        ~BroadPhaseCollision();
+        virtual ~BroadPhaseCollision();
 
         virtual void update() = 0;
 

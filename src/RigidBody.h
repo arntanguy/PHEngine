@@ -6,6 +6,7 @@
 #include "AssimpMeshEntity.h"
 #include "BoundingVolume.h"
 #include "AABoundingBox.h"
+#include "PhysicsBody.h"
 
 class Entity;
 
@@ -47,7 +48,7 @@ struct ContactModel
  *
  * physicsWorld->addRigidBody(rigidBody); // Adds it to the simulation (PhysicsWorld class)
  ***/
-class RigidBody
+class RigidBody : public PhysicsBody
 {
     public:
         enum CollidingType {BROAD_PHASE, NARROW_PHASE, NONE};
@@ -63,8 +64,6 @@ class RigidBody
 
 
     private:
-        static int id_counter;
-        int id;
         float mInvMass;
         CollidingType mCollide;
         bool mDebug;
@@ -75,7 +74,6 @@ class RigidBody
         //glm::vec3 mAngularMomentum; // L(t) = I(t)*w(t)
 
         Entity *mEntity; // attached graphic entity to which physics apply
-        BoundingVolume* mBoundingBox;
         MeshData *mMeshData;
 
         void init();
@@ -91,8 +89,6 @@ class RigidBody
 
         virtual void render(float ellapsedTime);
 
-        void setBoundingBox(BoundingVolume *boundingBox);
-
         void setPosition(const glm::vec3& position);
         void setEntity(Entity *entity);
         void setAngularVelocity(const glm::vec3& direction, float magnitude);
@@ -103,14 +99,10 @@ class RigidBody
         void scale(float scaleFactorX, float scaleFactorY, float scaleFactorZ);
         void translate(const glm::vec3& translation);
 
-        BoundingVolume *getBoundingBox() ;
         ContactModel* distanceMeshToMesh(RigidBody *planeRigidBody);
 
         void setCollide(CollidingType state);
         CollidingType getCollidingType() const;
-        int getId() const {
-            return id;
-        }
 
         glm::mat4 getRotation() const
         {

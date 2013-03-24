@@ -33,6 +33,7 @@ add_definitions(-DDEBUG=1 -DINFO=1)
 SET(SOURCES
 ${SRC_DIR}/ParticleGenerator.cpp
 ${SRC_DIR}/PhysicsWorld.cpp
+${SRC_DIR}/PhysicsBody.cpp
 ${SRC_DIR}/RigidBody.cpp
 ${SRC_DIR}/BoundingVolume.cpp
 ${SRC_DIR}/AABoundingBox.cpp

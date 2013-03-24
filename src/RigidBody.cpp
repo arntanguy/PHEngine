@@ -29,14 +29,13 @@
 #include <omp.h>
 
 
-int RigidBody::id_counter = 0;
 
-RigidBody::RigidBody()
+RigidBody::RigidBody() : PhysicsBody()
 {
     init();
 }
 
-RigidBody::RigidBody(Entity *mEntity, const float mass)
+RigidBody::RigidBody(Entity *mEntity, const float mass) : PhysicsBody()
 {
     init();
     setMass(mass);
@@ -45,7 +44,6 @@ RigidBody::RigidBody(Entity *mEntity, const float mass)
 
 void RigidBody::init()
 {
-    id = id_counter++;
     mRotation = glm::mat4(1.f);
     mInverseInertialTensor = glm::mat4(1.f);
     setMass(0.0);
@@ -58,7 +56,7 @@ void RigidBody::init()
     setAngularVelocity(glm::vec3(0.f, 0.f, 0.f), 0.f);
     scale(1.f, 1.f, 1.f);
 
-    mBoundingBox = 0;
+    mBoundingVolume = 0;
 
     setCollide(CollidingType::NONE);
 }
@@ -84,13 +82,13 @@ void RigidBody::update(float ellapsedTime)
     // Transformation = rotation followed by translation
     mTransformation *= glm::translate(mPosition.x, mPosition.y, mPosition.z) * mRotation ;
 
-    //if(mInvMass != 0) {
-    //mLinearMomentum.y -= ellapsedTime * .01f/mInvMass;
-    //}
+    if(mInvMass != 0) {
+        mLinearMomentum.y -= ellapsedTime * .001f*mInvMass;
+    }
 
-    if(mBoundingBox != 0)
+    if(mBoundingVolume != 0)
     {
-        mBoundingBox->update();
+        mBoundingVolume->update();
     }
 }
 
@@ -229,17 +227,6 @@ MeshData* RigidBody::getTransformedMeshData() const
     }
     return tMesh;
 }
-
-void RigidBody::setBoundingBox(BoundingVolume *boundingBox)
-{
-    mBoundingBox = boundingBox;
-}
-
-BoundingVolume* RigidBody::getBoundingBox()
-{
-    return mBoundingBox;
-}
-
 
 /**
  * @brief Compute a contact model from the minimal distance from mesh to mesh
@@ -476,41 +463,41 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
 
     return contactModel;
     glEnable(GL_LIGHTING);
-    }
+}
 
-    void RigidBody::scale(float scaleFactor)
-    {
-        scale(scaleFactor, scaleFactor, scaleFactor);
-    }
+void RigidBody::scale(float scaleFactor)
+{
+    scale(scaleFactor, scaleFactor, scaleFactor);
+}
 
-    void RigidBody::scale(float scaleFactorX, float scaleFactorY, float scaleFactorZ)
-    {
-        mScaleFactorX = scaleFactorX;
-        mScaleFactorY = scaleFactorY;
-        mScaleFactorZ = scaleFactorZ;
-    }
+void RigidBody::scale(float scaleFactorX, float scaleFactorY, float scaleFactorZ)
+{
+    mScaleFactorX = scaleFactorX;
+    mScaleFactorY = scaleFactorY;
+    mScaleFactorZ = scaleFactorZ;
+}
 
-    void RigidBody::setMass(float mass)
-    {
-        if( mass != 0 )
-            mInvMass = 1.f/mass;
-        else
-            mInvMass = 0.f;
-    }
+void RigidBody::setMass(float mass)
+{
+    if( mass != 0 )
+        mInvMass = 1.f/mass;
+    else
+        mInvMass = 0.f;
+}
 
-    void RigidBody::updateFromImpulse(glm::vec3 J, glm::vec3 omega)
-    {
-        //static bool truc = true;
-        //if(truc) {
-        //mLinearMomentum.y = -mLinearMomentum.y;
-        //truc = false;
-        //}
-        mLinearMomentum += J * mInvMass;
-        std::cout << "mLinearMomentum:" << " ( " << mLinearMomentum.x << ", " << mLinearMomentum.y << ", " << mLinearMomentum.z << " )" << std::endl;
+void RigidBody::updateFromImpulse(glm::vec3 J, glm::vec3 omega)
+{
+    //static bool truc = true;
+    //if(truc) {
+    //mLinearMomentum.y = -mLinearMomentum.y;
+    //truc = false;
+    //}
+    mLinearMomentum += J * mInvMass;
+    std::cout << "mLinearMomentum:" << " ( " << mLinearMomentum.x << ", " << mLinearMomentum.y << ", " << mLinearMomentum.z << " )" << std::endl;
 
-        glm::vec3 angularVelocity = mAngularVelocityNorm * mAngularVelocity;
-        angularVelocity += omega;
-        mAngularVelocityNorm = mt::norm(angularVelocity);
-        mAngularVelocity = glm::normalize(angularVelocity);
-    }
+    glm::vec3 angularVelocity = mAngularVelocityNorm * mAngularVelocity;
+    angularVelocity += omega;
+    mAngularVelocityNorm = mt::norm(angularVelocity);
+    mAngularVelocity = glm::normalize(angularVelocity);
+}
 
