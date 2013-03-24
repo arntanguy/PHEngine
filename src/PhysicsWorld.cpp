@@ -223,7 +223,8 @@ void PhysicsWorld::renderAllRigidBodies(float timestep) {
 		// Render
 		std::vector<RigidBody *>::iterator it;
 		for (it = mRigidBodies.begin(); it != mRigidBodies.end(); it++) {
-			(*it)->render(timestep);
+			(*it)->update(timestep);
+			(*it)->render();
 			debugBroadPhase(*it);
 			debugNarrowPhase(*it);
 		}

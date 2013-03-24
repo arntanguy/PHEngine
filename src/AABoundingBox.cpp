@@ -1,19 +1,19 @@
 /******************************************************************************
-     Copyright (C) 2013  TANGUY Arnaud arn.tanguy@gmail.com
-*                                                                             *
-* This program is free software; you can redistribute it and/or modify        *
-* it under the terms of the GNU General Public License as published by        *
-* the Free Software Foundation; either version 2 of the License, or           *
-* (at your option) any later version.                                         *
-*                                                                             *
-* This program is distributed in the hope that it will be useful,             *
-* but WITHOUT ANY WARRANTY; without even the implied warranty of              *
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                *
-* GNU General Public License for more details.                                *
-*                                                                             *
-* You should have received a copy of the GNU General Public License along     *
-* with this program; if not, write to the Free Software Foundation, Inc.,     *
-* 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 *
+ Copyright (C) 2013  TANGUY Arnaud arn.tanguy@gmail.com
+ *                                                                             *
+ * This program is free software; you can redistribute it and/or modify        *
+ * it under the terms of the GNU General Public License as published by        *
+ * the Free Software Foundation; either version 2 of the License, or           *
+ * (at your option) any later version.                                         *
+ *                                                                             *
+ * This program is distributed in the hope that it will be useful,             *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of              *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                *
+ * GNU General Public License for more details.                                *
+ *                                                                             *
+ * You should have received a copy of the GNU General Public License along     *
+ * with this program; if not, write to the Free Software Foundation, Inc.,     *
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 *
  ******************************************************************************/
 
 #include "RigidBody.h"
@@ -22,65 +22,72 @@
 #include <vector>
 #include "mt.h"
 
-AABoundingBox::AABoundingBox(RigidBody *parent, Type type) : BoundingVolume(parent)
-{
-    init(type, glm::vec3(), glm::vec3());
+AABoundingBox::AABoundingBox() :
+		BoundingVolume() {
+	mParent = 0;
 }
 
-AABoundingBox::AABoundingBox(RigidBody *parent, const glm::vec3& min, const glm::vec3& max, Type type = AABB_EXACT) : BoundingVolume(parent)
-{
-    init(type, min, max);
+AABoundingBox::AABoundingBox(RigidBody *parent, Type type) :
+		BoundingVolume(parent) {
+	init(type, glm::vec3(), glm::vec3());
 }
 
-void AABoundingBox::init(Type type, const glm::vec3& min, const glm::vec3& max)
-{
-    mType = type;
-    //update(glm::vec3(0,0,0), min, max);
-    computeFromMeshData();
+AABoundingBox::AABoundingBox(RigidBody *parent, const glm::vec3& min,
+		const glm::vec3& max, Type type = AABB_EXACT) :
+		BoundingVolume(parent) {
+	init(type, min, max);
 }
 
-AABoundingBox::~AABoundingBox()
-{
+void AABoundingBox::init(Type type, const glm::vec3& min,
+		const glm::vec3& max) {
+	mType = type;
+	//update(glm::vec3(0,0,0), min, max);
+	computeFromMeshData();
+}
+
+AABoundingBox::~AABoundingBox() {
 }
 
 /**
  * @brief Computes the exact AABB by going through all vertices and looking for min and max in all directions
  */
-void AABoundingBox::computeExactAABB()
-{
-    std::vector<glm::vec3>::const_iterator it = mMeshData->mVertices.begin();
-    mMin = glm::vec3(0);
-    mMax = glm::vec3(0);
-    for(; it != mMeshData->mVertices.end(); it++)
-    {
-        glm::vec4 transformed = mParent->getRotation() * glm::vec4(*it, 1);
-        mMin.x = glm::min(mMin.x, transformed.x);
-        mMin.y = glm::min(mMin.y, transformed.y);
-        mMin.z = glm::min(mMin.z, transformed.z);
-        mMax.x = glm::max(mMax.x, transformed.x);
-        mMax.y = glm::max(mMax.y, transformed.y);
-        mMax.z = glm::max(mMax.z, transformed.z);
-    }
-    //dinf << "Min: " << min.x << " " << min.y << " " << min.z << std::endl;
-    //dinf << "Max: " << max.x << " " << max.y << " " << max.z << std::endl;
-    this->update(mParent->getPosition(), mMin, mMax);
+void AABoundingBox::computeExactAABB() {
+	if (mParent != 0 && mMeshData != 0) {
+		std::vector<glm::vec3>::const_iterator it =
+				mMeshData->mVertices.begin();
+		mMin = glm::vec3(0);
+		mMax = glm::vec3(0);
+		for (; it != mMeshData->mVertices.end(); it++) {
+			glm::vec4 transformed = mParent->getRotation() * glm::vec4(*it, 1);
+			mMin.x = glm::min(mMin.x, transformed.x);
+			mMin.y = glm::min(mMin.y, transformed.y);
+			mMin.z = glm::min(mMin.z, transformed.z);
+			mMax.x = glm::max(mMax.x, transformed.x);
+			mMax.y = glm::max(mMax.y, transformed.y);
+			mMax.z = glm::max(mMax.z, transformed.z);
+		}
+		//dinf << "Min: " << min.x << " " << min.y << " " << min.z << std::endl;
+		//dinf << "Max: " << max.x << " " << max.y << " " << max.z << std::endl;
+		this->update(mParent->getPosition(), mMin, mMax);
+	}
 }
 
 /**
  * @brief Computes an approximate AABB fitting all possible orientations of the object
  */
-void AABoundingBox::computeApproximateAABB()
-{
-    float max = 0;
-    std::vector<glm::vec3>::const_iterator it;
-    for(it = mMeshData->mVertices.begin(); it != mMeshData->mVertices.end(); it++)
-    {
-        max = glm::max(mt::norm(glm::vec3(*it)), max);
-    }
-    mMin = glm::vec3(-max,-max, -max);
-    mMax = glm::vec3( max, max,  max);
+void AABoundingBox::computeApproximateAABB() {
+	if (mMeshData != 0) {
+		float max = 0;
+		std::vector<glm::vec3>::const_iterator it;
+		for (it = mMeshData->mVertices.begin();
+				it != mMeshData->mVertices.end(); it++) {
+			max = glm::max(mt::norm(glm::vec3(*it)), max);
+		}
+		mMin = glm::vec3(-max, -max, -max);
+		mMax = glm::vec3(max, max, max);
 
-    this->update(mParent->getPosition(), mMin, mMax);
+		this->update(mParent->getPosition(), mMin, mMax);
+	}
 }
 
 /**
@@ -90,46 +97,47 @@ void AABoundingBox::computeApproximateAABB()
  * @return
  *  True on success
  */
-bool AABoundingBox::computeFromMeshData()
-{
-    if(mMeshData != 0) {
-        if(mType == Type::AABB_EXACT) {
-            computeExactAABB();
-        }
-        else {
-            computeApproximateAABB();
-        }
-        return true;
-    }
-    return false;
+bool AABoundingBox::computeFromMeshData() {
+	if (mMeshData != 0) {
+		if (mType == Type::AABB_EXACT) {
+			computeExactAABB();
+		} else {
+			computeApproximateAABB();
+		}
+		return true;
+	}
+	return false;
 }
 
 /**
  * @brief Update the bounding box w.r.t the new parent rigid body location and orientation
  */
-void AABoundingBox::update()
-{
-    if(mType == AABB_EXACT) {
-        computeExactAABB();
-    } else {
-        update(mParent->getPosition());
-    }
+void AABoundingBox::update() {
+	if (mParent != 0 && mMeshData != 0) {
+		if (mType == AABB_EXACT) {
+			computeExactAABB();
+		} else {
+			if (mParent != 0) {
+				update(mParent->getPosition());
+			}
+		}
+	}
 }
 
-void AABoundingBox::update(const glm::vec3 &center, const glm::vec3& min, const glm::vec3& max)
-{
-    mMin = min;
-    mMax = max;
-    mSize = mMax - mMin;
-    update(center);
-    mEntity = new ParallelogramEntity(mCenter, mSize);
-    mEntity->generate();
+void AABoundingBox::update(const glm::vec3 &center, const glm::vec3& min,
+		const glm::vec3& max) {
+	mMin = min;
+	mMax = max;
+	mSize = mMax - mMin;
+	update(center);
+	mEntity = new ParallelogramEntity(mCenter, mSize);
+	mEntity->generate();
 }
 
 void AABoundingBox::update(const glm::vec3 &center) {
-    mCenter = center + 0.5f * (mMin + mMax);
-    mEntity = new ParallelogramEntity(mCenter, mSize);
-    mEntity->generate();
+	mCenter = center + 0.5f * (mMin + mMax);
+	mEntity = new ParallelogramEntity(mCenter, mSize);
+	mEntity->generate();
 }
 
 /**
@@ -141,21 +149,21 @@ void AABoundingBox::update(const glm::vec3 &center) {
  *
  * @return
  */
-bool AABoundingBox::render(bool collide)
-{
-    // Save all the states, so that it can be restored later.
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
+bool AABoundingBox::render(bool collide) {
+	std::cout << "render "<< mMin.x << " " << mMin.y << " " << mMin.z << " " << mMax.x << " "  << mMax.y << " " << mMax.z << std::endl;
+	// Save all the states, so that it can be restored later.
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-    // Render in wireframe
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	// Render in wireframe
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    if(collide) {
-        glColor3f(1.f, 0.f, 0.f);
-    } else {
-        glColor3f(0.f, 0.f, 1.f);
-    }
-    mEntity->render();
+	if (collide) {
+		glColor3f(1.f, 0.f, 0.f);
+	} else {
+		glColor3f(0.f, 0.f, 1.f);
+	}
+	mEntity->render();
 
-    glPopAttrib();
-    return true;
+	glPopAttrib();
+	return true;
 }

@@ -62,7 +62,6 @@ class RigidBody : public PhysicsBody
         float mAngularVelocityNorm;
         float mScaleFactorX, mScaleFactorY, mScaleFactorZ;
 
-
     private:
         float mInvMass;
         CollidingType mCollide;
@@ -77,7 +76,6 @@ class RigidBody : public PhysicsBody
         MeshData *mMeshData;
 
         void init();
-        void update(float ellapsedTime);
         glm::mat4 rotationMatrix(glm::vec3 axis, float angle);
 
         void approximateIntertialTensor();
@@ -87,7 +85,8 @@ class RigidBody : public PhysicsBody
         RigidBody(Entity *mEntity, const float mass);
         ~RigidBody();
 
-        virtual void render(float ellapsedTime);
+        void update(float ellapsedTime);
+        void render();
 
         void setPosition(const glm::vec3& position);
         void setEntity(Entity *entity);

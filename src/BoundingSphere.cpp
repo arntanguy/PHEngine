@@ -47,6 +47,7 @@ bool BoundingSphere::computeFromMeshData()
     {
         mRadius = glm::max(mt::norm(glm::vec3(*it)), mRadius);
     }
+    return true;
 }
 
 void BoundingSphere::update()

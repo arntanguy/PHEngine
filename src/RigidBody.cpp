@@ -105,10 +105,8 @@ glm::mat4 RigidBody::rotationMatrix(glm::vec3 axis, float angle)
  * @param ellapsedTime
  *  Time ellapsed since last simulation step
  */
-void RigidBody::render(float ellapsedTime)
+void RigidBody::render()
 {
-    update(ellapsedTime);
-
     // Build GL Matrix from glm mat4
     GLfloat *mat;
     mat = glm::value_ptr(mTransformation);
@@ -417,7 +415,7 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
         contactModel->type = ContactModel::Type::VE;
     }
     // E-E
-    if((normEE <= normVV) & (normEE <= normVE) && (normEE <= normVF)) {
+    if((normEE <= normVV) && (normEE <= normVE) && (normEE <= normVF)) {
         //std::cout << "EE" <<std::endl;
         dt::drawPoint(minPE1, 0.2, glm::vec3(1.,1., 0.));
         dt::drawPoint(minPE2, 0.2, glm::vec3(1.,1., 0.));
@@ -462,7 +460,6 @@ ContactModel* RigidBody::distanceMeshToMesh(RigidBody *otherRigidBody)
     }
 
     return contactModel;
-    glEnable(GL_LIGHTING);
 }
 
 void RigidBody::scale(float scaleFactor)

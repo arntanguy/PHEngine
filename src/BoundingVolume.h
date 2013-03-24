@@ -41,8 +41,9 @@ class BoundingVolume
         MeshData *mMeshData;
 
     public:
+        BoundingVolume();
         BoundingVolume(RigidBody *parent);
-        ~BoundingVolume();
+        virtual ~BoundingVolume();
 
         virtual bool computeFromMeshData() = 0;
         virtual void update() = 0;

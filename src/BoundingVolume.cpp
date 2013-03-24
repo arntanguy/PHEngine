@@ -20,6 +20,10 @@
 #include "MeshData.h"
 #include "RigidBody.h"
 
+BoundingVolume::BoundingVolume() {
+	mParent = 0;
+}
+
 BoundingVolume::BoundingVolume(RigidBody *parent)
 {
     mParent = parent;

@@ -48,6 +48,7 @@ bool Triangle::render()
         glVertex3f(mPoints[1].x, mPoints[1].y, mPoints[1].z);
         glVertex3f(mPoints[2].x, mPoints[2].y, mPoints[2].z);
     glEnd();
+    return true;
 }
 
 bool Triangle::generate()
