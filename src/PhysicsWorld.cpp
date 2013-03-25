@@ -24,6 +24,9 @@
 #include <algorithm>
 #include "mt.h"
 #include "FluidSimulation.h"
+#include "PhysicsBody.h"
+#include "RigidBody.h"
+#include "ContactModel.h"
 
 using namespace std;
 
@@ -35,7 +38,7 @@ PhysicsWorld::PhysicsWorld() {
 PhysicsWorld::~PhysicsWorld() {
 }
 
-void PhysicsWorld::addRigidBody(RigidBody *rigidBody) {
+void PhysicsWorld::addRigidBody(PhysicsBody *rigidBody) {
 	if (rigidBody != 0)
 		mRigidBodies.push_back(rigidBody);
 }
@@ -53,21 +56,18 @@ void PhysicsWorld::detectBroadPhaseCollisions() {
 	mCollidingPairs.clear();
 	if (mBroadPhaseCollision.size() != 0) {
 		std::unordered_map<RigidBodyPair, AxisCollide> collidingPairs;
-		std::vector<BroadPhaseCollision *>::iterator it;
-		std::unordered_map<RigidBodyPair, AxisCollide>::iterator cit;
-		for (it = mBroadPhaseCollision.begin();
+		for (auto it = mBroadPhaseCollision.begin();
 				it != mBroadPhaseCollision.end(); it++) {
 			(*it)->update();
-
 			collidingPairs = (*it)->getCollidingPairs();
-			for (cit = collidingPairs.begin(); cit != collidingPairs.end();
+			for (auto cit = collidingPairs.begin(); cit != collidingPairs.end();
 					cit++) {
 				if (cit->second.collide()) {
 					mCollidingPairs[cit->first] =
-							RigidBody::CollidingType::BROAD_PHASE;
+							PhysicsBody::CollidingType::BROAD_PHASE;
 				} else {
 					mCollidingPairs[cit->first] =
-							RigidBody::CollidingType::NONE;
+							PhysicsBody::CollidingType::NONE;
 				}
 			}
 		}
@@ -78,7 +78,7 @@ void PhysicsWorld::detectBroadPhaseCollisions() {
 void PhysicsWorld::checkCollisions(float minDistance) {
 	detectBroadPhaseCollisions();
 	//std::cout << "Check amongst " << mCollidingPairs.size() << " objects" << std::endl;
-	std::unordered_map<RigidBodyPair, RigidBody::CollidingType>::iterator it;
+	std::unordered_map<RigidBodyPair, PhysicsBody::CollidingType>::iterator it;
 	ContactModel *contactModel;
 	for (it = mCollidingPairs.begin(); it != mCollidingPairs.end(); it++) {
 		RigidBodyPair pair = it->first;
@@ -88,7 +88,7 @@ void PhysicsWorld::checkCollisions(float minDistance) {
 		rigidBody1 = dynamic_cast<RigidBody *>(pair.rigidBody1);
 		rigidBody2 = dynamic_cast<RigidBody *>(pair.rigidBody2);
 		if (rigidBody1 != 0 && rigidBody2 != 0) {
-			contactModel = rigidBody1->distanceMeshToMesh(rigidBody2);
+			contactModel = rigidBody1->distanceToPhysicsBody(rigidBody2);
 			if (contactModel->distance <= minDistance) {
 				//std::cout << "Narrow phase collision with distance: " << contactModel->distance << std::endl;
 				it->second = RigidBody::CollidingType::NARROW_PHASE;
@@ -98,21 +98,23 @@ void PhysicsWorld::checkCollisions(float minDistance) {
 
 		FluidSimulation *fluid = 0;
 		RigidBody *rigidBody = 0;
-		if(rigidBody1 != 0) {
-			FluidSimulation *f = dynamic_cast<FluidSimulation *>(pair.rigidBody2);
-			if(f != 0) {
+		if (rigidBody1 != 0) {
+			FluidSimulation *f =
+					dynamic_cast<FluidSimulation *>(pair.rigidBody2);
+			if (f != 0) {
 				rigidBody = rigidBody1;
 				fluid = f;
 			}
-		} else if(rigidBody2 != 0) {
-			FluidSimulation *f = dynamic_cast<FluidSimulation *>(pair.rigidBody2);
-			if(f != 0) {
+		} else if (rigidBody2 != 0) {
+			FluidSimulation *f =
+					dynamic_cast<FluidSimulation *>(pair.rigidBody2);
+			if (f != 0) {
 				rigidBody = rigidBody2;
 				fluid = f;
 			}
 		}
-		if(fluid != 0 && rigidBody != 0) {
-
+		if (fluid != 0 && rigidBody != 0) {
+			cout << "Fluid interaction" << endl;
 		}
 
 	}
@@ -206,7 +208,7 @@ void PhysicsWorld::reactToCollision(ContactModel *contact) {
 	std::cout << "\n\n";
 }
 
-void PhysicsWorld::debugBroadPhase(RigidBody *rigidBody) {
+void PhysicsWorld::debugBroadPhase(PhysicsBody *rigidBody) {
 	if (mDebugBroadPhase) {
 		RigidBody::CollidingType ct = rigidBody->getCollidingType();
 		if (ct == RigidBody::CollidingType::NONE)
@@ -216,7 +218,7 @@ void PhysicsWorld::debugBroadPhase(RigidBody *rigidBody) {
 	}
 }
 
-void PhysicsWorld::debugNarrowPhase(RigidBody *rigidBody) {
+void PhysicsWorld::debugNarrowPhase(PhysicsBody *rigidBody) {
 	if (mDebugNarrowPhase) {
 		RigidBody::CollidingType ct = rigidBody->getCollidingType();
 		if (ct == RigidBody::CollidingType::NARROW_PHASE) {
@@ -228,44 +230,28 @@ void PhysicsWorld::debugNarrowPhase(RigidBody *rigidBody) {
 
 void PhysicsWorld::renderAllRigidBodies(float timestep) {
 	// Set debug info
-	std::unordered_map<RigidBodyPair, RigidBody::CollidingType>::iterator cit =
-			mCollidingPairs.begin();
-	for (; cit != mCollidingPairs.end(); cit++) {
-		RigidBody *rigidBody1 = 0;
-		RigidBody *rigidBody2 = 0;
-		rigidBody1 = dynamic_cast<RigidBody *>(cit->first.rigidBody1);
-		rigidBody2 = dynamic_cast<RigidBody *>(cit->first.rigidBody2);
-		if (rigidBody1 != 0 && rigidBody2 != 0) {
-			rigidBody1->setCollide(cit->second);
-			rigidBody2->setCollide(cit->second);
-		}
-
-		// Render
-		std::vector<RigidBody *>::iterator it;
-		for (it = mRigidBodies.begin(); it != mRigidBodies.end(); it++) {
-			(*it)->update(timestep);
-			(*it)->render();
-			debugBroadPhase(*it);
-			debugNarrowPhase(*it);
-		}
-
-		// Restore debug info
-		cit = mCollidingPairs.begin();
-		for (; cit != mCollidingPairs.end(); cit++) {
-			RigidBody *rigidBody1 = 0;
-			RigidBody *rigidBody2 = 0;
-			rigidBody1 = dynamic_cast<RigidBody *>(cit->first.rigidBody1);
-			rigidBody2 = dynamic_cast<RigidBody *>(cit->first.rigidBody2);
-
-			if (rigidBody1 != 0 && rigidBody2 != 0) {
-				rigidBody1->setCollide(RigidBody::CollidingType::NONE);
-				rigidBody2->setCollide(RigidBody::CollidingType::NONE);
-			}
-		}
+	for (auto cit = mCollidingPairs.begin(); cit != mCollidingPairs.end();
+			cit++) {
+			cit->first.rigidBody1->setCollide(cit->second);
+			cit->first.rigidBody2->setCollide(cit->second);
 	}
+
+	// Render
+	for (auto it = mRigidBodies.begin(); it != mRigidBodies.end(); it++) {
+		(*it)->update(timestep);
+		(*it)->render();
+		debugBroadPhase(*it);
+	//	debugNarrowPhase(*it);
+	}
+
+	for (auto cit = mCollidingPairs.begin(); cit != mCollidingPairs.end();
+				cit++) {
+				cit->first.rigidBody1->setCollide(PhysicsBody::CollidingType::NONE);
+				cit->first.rigidBody2->setCollide(PhysicsBody::CollidingType::NONE);
+			}
 }
 
-std::vector<RigidBody *> PhysicsWorld::getRigidBodies() const {
+std::vector<PhysicsBody *> PhysicsWorld::getRigidBodies() const {
 	return mRigidBodies;
 }
 
@@ -281,3 +267,4 @@ void PhysicsWorld::setDebugBroadPhase(bool status) {
 void PhysicsWorld::setDebugNarrowPhase(bool status) {
 	mDebugNarrowPhase = status;
 }
+

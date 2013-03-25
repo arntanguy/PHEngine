@@ -133,25 +133,25 @@ void Grid::generateGrid() {
  * Compile the openGL commands needed to render the scene
  */
 void Grid::generateVerticesDisplayList() {
-	// create one display list
-	mDisplayListIndex = glGenLists(1);
-
-	// compile the display list, store a triangle in it
-	glNewList(mDisplayListIndex, GL_COMPILE);
-	glFrontFace(GL_CW); //   Vertex are added clockwise. Used to calculate normals
-
-	Vertex v;
-	int j = 0;
-
-	glBegin(GL_TRIANGLE_STRIP);
-	for (int i = 0; i < (2 * mGridSize) * (mGridSize - 1); i++) {
-		v = mVertices[i];
-		//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, v.texcoords.x, v.texcoords.y);
-		glVertex3f(v.position.x, v.position.y, v.position.z);
-	}
-	glEnd();
-
-	glEndList();
+//	// create one display list
+//	mDisplayListIndex = glGenLists(1);
+//
+//	// compile the display list, store a triangle in it
+//	glNewList(mDisplayListIndex, GL_COMPILE);
+//	glFrontFace(GL_CW); //   Vertex are added clockwise. Used to calculate normals
+//
+//	Vertex v;
+//	int j = 0;
+//
+//	glBegin(GL_TRIANGLE_STRIP);
+//	for (int i = 0; i < (2 * mGridSize) * (mGridSize - 1); i++) {
+//		v = mVertices[i];
+//		//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, v.texcoords.x, v.texcoords.y);
+//		glVertex3f(v.position.x, v.position.y, v.position.z);
+//	}
+//	glEnd();
+//
+//	glEndList();
 }
 
 bool Grid::generate() {
@@ -160,12 +160,12 @@ bool Grid::generate() {
 }
 
 bool Grid::render() {
-	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	glPushAttrib (GL_ALL_ATTRIB_BITS);
 	// draw the display list
 	//glCallList(mDisplayListIndex);
-
+	glColor3f(1., 1., 1.);
 	Vertex v;
-	glBegin(GL_TRIANGLE_STRIP);
+	glBegin (GL_TRIANGLE_STRIP);
 	for (int i = 0; i < mNumberOfVertices; ++i) {
 		v = mVertices[mIndices[i]];
 		//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, v.texcoords.x, v.texcoords.y);
@@ -200,7 +200,7 @@ int Grid::getIndex(int i, int j, VertexPos pos) const {
  * @brief
  * Return the vertex for the corner "pos" of cell (i, j)
  */
-Vertex Grid::getVertexForCell(int i, int j, VertexPos pos) const throw() {
+Vertex Grid::getVertexForCell(int i, int j, VertexPos pos) const throw () {
 
 	int index = getIndex(i, j, pos);
 

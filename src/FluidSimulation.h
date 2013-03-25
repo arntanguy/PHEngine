@@ -122,7 +122,9 @@ public:
 	void debugRenderPipes();
 	void applyForceToControlPoint(int ci, int cj, float force);
 	virtual void setBoundingBox(BoundingVolume *boundingBox);
+	BoundingVolume* getBoundingBox();
 
+	virtual ContactModel* distanceToPhysicsBody(PhysicsBody*);
 };
 
 #endif /* CELLGRID_H_ */

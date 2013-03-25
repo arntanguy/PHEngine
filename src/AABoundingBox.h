@@ -23,6 +23,8 @@
 #include "ParallelogramEntity.h"
 #include <glm/glm.hpp>
 
+class PhysicsBody;
+
 /**
  * @brief Provides an Axis Aligned Bounding Box
  * This type of bounding box is always oriented by 3 main axis (x,y,z).
@@ -56,8 +58,8 @@ private:
 
 public:
 	AABoundingBox();
-	AABoundingBox(RigidBody *parent, Type type = Type::AABB_EXACT);
-	AABoundingBox(RigidBody *parent, const glm::vec3& mMin,
+	AABoundingBox(PhysicsBody *parent, Type type = Type::AABB_EXACT);
+	AABoundingBox(PhysicsBody *parent, const glm::vec3& mMin,
 			const glm::vec3& mMax, Type type);
 	virtual ~AABoundingBox();
 
@@ -66,9 +68,8 @@ public:
 	virtual bool render(bool collide);
 
 	// XXX: fix it
-	void manualUpdate(glm::vec3 min, glm::vec3 max) {
-		this->update(glm::vec3(0,0,0), min, max);
-	}
+	void manualUpdate(glm::vec3 min, glm::vec3 max);
+
 	glm::vec3 getMin() const {
 		return mCenter + mMin;
 	}

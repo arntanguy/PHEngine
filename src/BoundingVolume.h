@@ -23,7 +23,7 @@
 #include <glm/glm.hpp>
 
 class MeshData;
-class RigidBody;
+class PhysicsBody;
 
 /**
  * @brief Abstract class representing a bounding box
@@ -37,12 +37,12 @@ class BoundingVolume
     protected:
         bool mCollide;
 
-        RigidBody *mParent;
+        PhysicsBody *mParent;
         MeshData *mMeshData;
 
     public:
         BoundingVolume();
-        BoundingVolume(RigidBody *parent);
+        BoundingVolume(PhysicsBody *parent);
         virtual ~BoundingVolume();
 
         virtual bool computeFromMeshData() = 0;

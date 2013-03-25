@@ -35,7 +35,7 @@ void AABBBroadPhaseCollision::update() {
 
 	// Clear all colliding pairs
 	mCollidingPairs.clear();
-	std::vector<RigidBody *> rigidBodies = mPhysicsWorld->getRigidBodies();
+	std::vector<PhysicsBody *> rigidBodies = mPhysicsWorld->getRigidBodies();
 	/**
 	 * Step 1: sort list for all 3 axis by minimum location of bounding box
 	 * XXX: take into account frame coherency to get a quicker sort
@@ -46,8 +46,7 @@ void AABBBroadPhaseCollision::update() {
 	std::unordered_map<RigidBodyPair, AxisCollide> collidingPairs;
 	AABoundingBox *boundingBox = 0;
 	glm::vec3 min, max;
-	std::vector<RigidBody *>::iterator it;
-	for (it = rigidBodies.begin(); it != rigidBodies.end(); it++) {
+	for (auto it = rigidBodies.begin(); it != rigidBodies.end(); it++) {
 		boundingBox = 0;
 		// Only handle AABB, do nothing with the rest
 		boundingBox = dynamic_cast<AABoundingBox *>((*it)->getBoundingBox());

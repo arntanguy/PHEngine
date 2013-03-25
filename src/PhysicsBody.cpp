@@ -22,19 +22,25 @@
  ********************************************************************************/
 
 #include "PhysicsBody.h"
+#include <iostream>
+
+using namespace std;
 
 int PhysicsBody::id_counter = 0;
 
 PhysicsBody::PhysicsBody() {
+	init();
 	mBoundingVolume = 0;
 }
 
 PhysicsBody::PhysicsBody(BoundingVolume *boundingVolume) {
+	init();
 	setBoundingBox(boundingVolume);
 }
 
 void PhysicsBody::init() {
 	 id = id_counter++;
+	 cerr << "Init("<<id<<")"<<endl;
 }
 
 PhysicsBody::~PhysicsBody() {
@@ -53,4 +59,23 @@ BoundingVolume* PhysicsBody::getBoundingBox()
 }
 
 
+void PhysicsBody::setCollide(CollidingType collide)
+{
+    mCollide = collide;
+}
+
+PhysicsBody::CollidingType PhysicsBody::getCollidingType() const
+{
+    return mCollide;
+}
+
+void PhysicsBody::setPosition(const glm::vec3 & position)
+{
+    mPosition = position;
+}
+
+glm::vec3 PhysicsBody::getPosition() const
+{
+	return mPosition;
+}
 

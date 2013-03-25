@@ -122,8 +122,8 @@ struct RigidBodyPair
 
     bool operator==(const RigidBodyPair &c) const
     {
-        return ((rigidBody1 == c.rigidBody1) && (rigidBody2 == c.rigidBody2))  ||
-            ((rigidBody2 == c.rigidBody1) && (rigidBody1 == c.rigidBody2)) ;
+        return ((rigidBody1->getId() == c.rigidBody1->getId()) && (rigidBody2->getId() == c.rigidBody2->getId()))  ||
+            ((rigidBody2->getId() == c.rigidBody1->getId()) && (rigidBody1->getId() == c.rigidBody2->getId())) ;
     }
 };
 

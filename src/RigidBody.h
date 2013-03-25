@@ -9,25 +9,8 @@
 #include "PhysicsBody.h"
 
 class Entity;
-
-struct ContactModel
-{
-    enum Type {VV, VE, EE, VF};
-    Type type;
-    glm::vec3 contactPoint;
-    glm::vec3 contactPoint1;
-    glm::vec3 contactPoint2;
-    glm::vec3 normal;
-    glm::vec3 edge1[2];
-    glm::vec3 edge2[2];
-    glm::vec3 edge3[2];
-    float distance;
-
-    RigidBody *rigidBody1;
-    RigidBody *rigidBody2;
-    bool contactHappened;
-};
-
+class PhysicsBody;
+class ContactModel;
 
 /**
  * @brief Represents a rigid body
@@ -50,11 +33,7 @@ struct ContactModel
  ***/
 class RigidBody : public PhysicsBody
 {
-    public:
-        enum CollidingType {BROAD_PHASE, NARROW_PHASE, NONE};
-
     protected:
-        glm::vec3 mPosition;
         glm::mat4 mRotation;
         glm::mat4 mInverseInertialTensor;
         glm::vec3 mLinearMomentum; // P(t) = v(t)*m
@@ -64,7 +43,6 @@ class RigidBody : public PhysicsBody
 
     private:
         float mInvMass;
-        CollidingType mCollide;
         bool mDebug;
         glm::mat4 mTransformation; // Final transformation
 
@@ -88,7 +66,6 @@ class RigidBody : public PhysicsBody
         void update(float ellapsedTime);
         void render();
 
-        void setPosition(const glm::vec3& position);
         void setEntity(Entity *entity);
         void setAngularVelocity(const glm::vec3& direction, float magnitude);
         void setLinearMomentum(const glm::vec3 &linearMomentum);
@@ -98,19 +75,13 @@ class RigidBody : public PhysicsBody
         void scale(float scaleFactorX, float scaleFactorY, float scaleFactorZ);
         void translate(const glm::vec3& translation);
 
-        ContactModel* distanceMeshToMesh(RigidBody *planeRigidBody);
-
-        void setCollide(CollidingType state);
-        CollidingType getCollidingType() const;
+        virtual ContactModel* distanceToPhysicsBody(PhysicsBody *planeRigidBody);
 
         glm::mat4 getRotation() const
         {
             return mRotation;
         }
-        glm::vec3 getPosition() const
-        {
-            return mPosition;
-        }
+
         glm::vec3 getLinearVelocity() const
         {
             return mLinearMomentum;

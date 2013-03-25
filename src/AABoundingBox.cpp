@@ -17,22 +17,26 @@
  ******************************************************************************/
 
 #include "RigidBody.h"
+#include "PhysicsBody.h"
 #include "AABoundingBox.h"
 #include "MeshData.h"
 #include <vector>
 #include "mt.h"
+#include <iostream>
+
+using namespace std;
 
 AABoundingBox::AABoundingBox() :
 		BoundingVolume() {
 	mParent = 0;
 }
 
-AABoundingBox::AABoundingBox(RigidBody *parent, Type type) :
+AABoundingBox::AABoundingBox(PhysicsBody *parent, Type type) :
 		BoundingVolume(parent) {
 	init(type, glm::vec3(), glm::vec3());
 }
 
-AABoundingBox::AABoundingBox(RigidBody *parent, const glm::vec3& min,
+AABoundingBox::AABoundingBox(PhysicsBody *parent, const glm::vec3& min,
 		const glm::vec3& max, Type type = AABB_EXACT) :
 		BoundingVolume(parent) {
 	init(type, min, max);
@@ -55,21 +59,27 @@ void AABoundingBox::computeExactAABB() {
 	if (mParent != 0 && mMeshData != 0) {
 		std::vector<glm::vec3>::const_iterator it =
 				mMeshData->mVertices.begin();
-		mMin = glm::vec3(0);
-		mMax = glm::vec3(0);
-		for (; it != mMeshData->mVertices.end(); it++) {
-			glm::vec4 transformed = mParent->getRotation() * glm::vec4(*it, 1);
-			mMin.x = glm::min(mMin.x, transformed.x);
-			mMin.y = glm::min(mMin.y, transformed.y);
-			mMin.z = glm::min(mMin.z, transformed.z);
-			mMax.x = glm::max(mMax.x, transformed.x);
-			mMax.y = glm::max(mMax.y, transformed.y);
-			mMax.z = glm::max(mMax.z, transformed.z);
+		RigidBody *rb = 0;
+		rb = dynamic_cast<RigidBody *>(mParent);
+		if (rb != 0) {
+			mMin = glm::vec3(0);
+			mMax = glm::vec3(0);
+			for (; it != mMeshData->mVertices.end(); it++) {
+				glm::vec4 transformed = rb->getRotation()
+						* glm::vec4(*it, 1);
+				mMin.x = glm::min(mMin.x, transformed.x);
+				mMin.y = glm::min(mMin.y, transformed.y);
+				mMin.z = glm::min(mMin.z, transformed.z);
+				mMax.x = glm::max(mMax.x, transformed.x);
+				mMax.y = glm::max(mMax.y, transformed.y);
+				mMax.z = glm::max(mMax.z, transformed.z);
+			}
+			//dinf << "Min: " << min.x << " " << min.y << " " << min.z << std::endl;
+			//dinf << "Max: " << max.x << " " << max.y << " " << max.z << std::endl;
+			this->update(mParent->getPosition(), mMin, mMax);
 		}
-		//dinf << "Min: " << min.x << " " << min.y << " " << min.z << std::endl;
-		//dinf << "Max: " << max.x << " " << max.y << " " << max.z << std::endl;
-		this->update(mParent->getPosition(), mMin, mMax);
 	}
+
 }
 
 /**
@@ -150,9 +160,8 @@ void AABoundingBox::update(const glm::vec3 &center) {
  * @return
  */
 bool AABoundingBox::render(bool collide) {
-	std::cout << "render "<< mMin.x << " " << mMin.y << " " << mMin.z << " " << mMax.x << " "  << mMax.y << " " << mMax.z << std::endl;
 	// Save all the states, so that it can be restored later.
-	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	glPushAttrib (GL_ALL_ATTRIB_BITS);
 
 	// Render in wireframe
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -166,4 +175,18 @@ bool AABoundingBox::render(bool collide) {
 
 	glPopAttrib();
 	return true;
+}
+
+/**
+ * Min, max: absolute values relative to the world
+ * XXX: change that?
+ * @param min
+ * @param max
+ */
+void AABoundingBox::manualUpdate(glm::vec3 min, glm::vec3 max) {
+	glm::vec3 center = 0.5f * (min + max);
+	min = min - center;
+	max = max - center;
+
+	this->update(center, min, max);
 }

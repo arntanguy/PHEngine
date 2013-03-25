@@ -38,6 +38,7 @@ FluidSimulation::FluidSimulation() : PhysicsBody() {
 
 void FluidSimulation::init() {
 	mBoundingBox = 0;
+    setCollide(CollidingType::NONE);
 }
 
 FluidSimulation::FluidSimulation(int gridSize, float gridLength,
@@ -132,7 +133,7 @@ void FluidSimulation::generatePipes() {
  * 	Timestep for the update
  */
 void FluidSimulation::update(float timeEllapsed) {
-	cout << "Update(" << timeEllapsed << ")" << endl;
+	timeEllapsed = 0.1;
 
 	clock_t t = clock();
 
@@ -378,7 +379,6 @@ void FluidSimulation::render() {
 	 }*/
 
 	mGrid->render();
-	mBoundingBox->render(false);
 	//debugRenderPipes();
 }
 
@@ -462,3 +462,13 @@ void FluidSimulation::setBoundingBox(BoundingVolume *boundingBox)
 		mBoundingBox = 0;
 	}
 }
+
+BoundingVolume* FluidSimulation::getBoundingBox() {
+	return mBoundingBox;
+}
+
+ContactModel* FluidSimulation::distanceToPhysicsBody(PhysicsBody* physicsBody) {
+	cerr << "Distance from fluid to physics body not implemented" << endl;
+	return 0;
+}
+

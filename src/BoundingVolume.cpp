@@ -18,16 +18,20 @@
 
 #include "BoundingVolume.h"
 #include "MeshData.h"
+#include "BoundingVolume.h"
 #include "RigidBody.h"
 
 BoundingVolume::BoundingVolume() {
 	mParent = 0;
 }
 
-BoundingVolume::BoundingVolume(RigidBody *parent)
+BoundingVolume::BoundingVolume(PhysicsBody *parent)
 {
     mParent = parent;
-    mMeshData = mParent->getTransformedMeshData();
+    RigidBody *b = 0;
+    b = dynamic_cast<RigidBody *>(parent);
+    if(b != 0)
+    	mMeshData = b->getTransformedMeshData();
 }
 
 BoundingVolume::~BoundingVolume()

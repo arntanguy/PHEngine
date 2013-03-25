@@ -1,5 +1,5 @@
 /********************************************************************************
- * PhysicsBody.h
+ * ContactModels.h
  *
  *  Created on: 24 Mar 2013
  *      Author: Arnaud TANGUY
@@ -21,53 +21,29 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 *
  ********************************************************************************/
 
-#ifndef PHYSICSBODY_H_
-#define PHYSICSBODY_H_
+#ifndef CONTACTMODELS_H_
+#define CONTACTMODELS_H_
 
-#include "BoundingVolume.h"
 #include <glm/glm.hpp>
+#include "RigidBody.h"
 
-class ContactModel;
+struct ContactModel
+{
+    enum Type {VV, VE, EE, VF};
+    Type type;
+    glm::vec3 contactPoint;
+    glm::vec3 contactPoint1;
+    glm::vec3 contactPoint2;
+    glm::vec3 normal;
+    glm::vec3 edge1[2];
+    glm::vec3 edge2[2];
+    glm::vec3 edge3[2];
+    float distance;
 
-class PhysicsBody {
-public:
-	enum CollidingType {
-		BROAD_PHASE, NARROW_PHASE, NONE
-	};
-
-private:
-	static int id_counter;
-	int id;
-	void init();
-
-protected:
-	BoundingVolume *mBoundingVolume;
-	CollidingType mCollide;
-	glm::vec3 mPosition;
-
-public:
-	PhysicsBody();
-	PhysicsBody(BoundingVolume *boundingVolume);
-	virtual ~PhysicsBody();
-
-	virtual BoundingVolume *getBoundingBox();
-	virtual void setBoundingBox(BoundingVolume *boundingBox);
-
-	virtual void update(float) = 0;
-	virtual void render() = 0;
-	virtual ContactModel* distanceToPhysicsBody(
-			PhysicsBody *planeRigidBody) = 0;
-
-	virtual void setCollide(CollidingType state);
-	virtual CollidingType getCollidingType() const;
-
-	virtual void setPosition(const glm::vec3& position);
-	virtual glm::vec3 getPosition() const;
-
-	int getId() const {
-		return id;
-	}
-
+    RigidBody *rigidBody1;
+    RigidBody *rigidBody2;
+    bool contactHappened;
 };
 
-#endif /* PHYSICSBODY_H_ */
+
+#endif /* CONTACTMODELS_H_ */

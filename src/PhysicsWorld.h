@@ -24,9 +24,10 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <glm/glm.hpp>
-#include "RigidBody.h"
 #include "BroadPhaseCollision.h"
+#include "RigidBody.h"
 
+class PhysicsBody;
 
 /**
  * @brief Manages the physic world pipeline
@@ -40,27 +41,27 @@ class PhysicsWorld
         bool mDebugBroadPhase;
         bool mDebugNarrowPhase;
 
-        void debugBroadPhase(RigidBody *rigidBody);
-        void debugNarrowPhase(RigidBody *rigidBody);
+        void debugBroadPhase(PhysicsBody *rigidBody);
+        void debugNarrowPhase(PhysicsBody *rigidBody);
 
     private:
         // Active rigid bodies
-        std::vector<RigidBody *> mRigidBodies;
+        std::vector<PhysicsBody *> mRigidBodies;
         std::vector<BroadPhaseCollision *> mBroadPhaseCollision;
-        std::unordered_map<RigidBodyPair, RigidBody::CollidingType> mCollidingPairs;
+        std::unordered_map<RigidBodyPair, PhysicsBody::CollidingType> mCollidingPairs;
 
     public:
         PhysicsWorld();
         ~PhysicsWorld();
 
-        void addRigidBody(RigidBody *rigidBody);
+        void addRigidBody(PhysicsBody *rigidBody);
         void addBroadPhaseCollisionHandler(BroadPhaseCollision *broadPhaseCollision);
 
         void detectBroadPhaseCollisions();
         void checkCollisions(float minDistance);
         void reactToCollision(ContactModel *contact);
         void renderAllRigidBodies(float timestep);
-        std::vector<RigidBody *> getRigidBodies() const;
+        std::vector<PhysicsBody *> getRigidBodies() const;
 
 
         void setDebugAll(bool status = true);

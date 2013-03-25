@@ -31,7 +31,7 @@ void BoundingSphereBroadPhaseCollision::update()
 {
     mCollidingPairs.clear();
 
-    std::vector<RigidBody *> rigidBodies = mPhysicsWorld->getRigidBodies();
+    std::vector<PhysicsBody *> rigidBodies = mPhysicsWorld->getRigidBodies();
 
     std::vector<RigidBody *>::iterator it;
     BoundingSphere *boundingSphere1, *boundingSphere2 = 0;
