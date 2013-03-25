@@ -35,6 +35,7 @@
 #include "PhysicsBody.h"
 
 class AABoundingBox;
+class RigidBody;
 
 /**
  * Key from one cell to the next cell of the grid (i,j)->(k,l).
@@ -125,6 +126,7 @@ public:
 	BoundingVolume* getBoundingBox();
 
 	virtual ContactModel* distanceToPhysicsBody(PhysicsBody*);
+	void reactToRigidBody(RigidBody *rigidBody);
 };
 
 #endif /* CELLGRID_H_ */

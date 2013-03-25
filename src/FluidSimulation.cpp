@@ -21,9 +21,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 *
  ********************************************************************************/
 
+#include "RigidBody.h"
+#include <GL/gl.h>
 #include "FluidSimulation.h"
 #include <glm/glm.hpp>
-#include <GL/gl.h>
 #include <iostream>
 #include "DrawingTools.h"
 #include "AABoundingBox.h"
@@ -31,18 +32,21 @@
 #include <time.h>
 
 using namespace std;
+using namespace glm;
 
-FluidSimulation::FluidSimulation() : PhysicsBody() {
+FluidSimulation::FluidSimulation() :
+		PhysicsBody() {
 	init();
 }
 
 void FluidSimulation::init() {
 	mBoundingBox = 0;
-    setCollide(CollidingType::NONE);
+	setCollide(CollidingType::NONE);
 }
 
 FluidSimulation::FluidSimulation(int gridSize, float gridLength,
-		float particleEmittingThreshold) : PhysicsBody() {
+		float particleEmittingThreshold) :
+		PhysicsBody() {
 	init();
 	mGridSize = gridSize;
 	mCellLength = gridLength / gridSize;
@@ -59,11 +63,11 @@ FluidSimulation::FluidSimulation(int gridSize, float gridLength,
 		}
 	}
 	//(*mCells)(50, 50)->setVolume(10000);
-	(*mCells)(0, 0)->setVolume(10000);
-	(*mCells)(99, 99)->setVolume(10000);
-	(*mCells)(99, 0)->setVolume(10000);
-	(*mCells)(0, 99)->setVolume(10000);
-	(*mCells)(50, 50)->setExternalForce(50000);
+	/*	(*mCells)(0, 0)->setVolume(10000);
+	 (*mCells)(99, 99)->setVolume(10000);
+	 (*mCells)(99, 0)->setVolume(10000);
+	 (*mCells)(0, 99)->setVolume(10000);
+	 (*mCells)(50, 50)->setExternalForce(50000); */
 
 	// Fluid density
 	p = 1; // water
@@ -168,24 +172,25 @@ void FluidSimulation::update(float timeEllapsed) {
 				float Hkl = hkl * p * g + p0;
 				float Eij = cell1->getExternalForce();
 				float Ekl = cell2->getExternalForce();
-				float aij_kl = (p * g * (hij - hkl) + (Eij - Ekl))   / (p * pipeLength);
+				float aij_kl = (p * g * (hij - hkl) + (Eij - Ekl))
+						/ (p * pipeLength);
 				float Qij_kl = timeEllapsed * (c * aij_kl);
 				float newFlow = Qij_kl + pipe->getPreviousFlow();
 				pipe->setFlow(newFlow);
 
 //				if (i == 1 && j == 0) {
-					/*cout << "hij(" << hij << "), hkl(" << hkl
-					 << "), Hij(" << Hij << "), Hkl(" << Hkl
-					 << "), Pij_kl(" << Pij_kl << "), a_ijkl("
-					 << aij_kl << "), Qij_kl(" << Qij_kl << endl;
-					 cout << "Previous Flow: " << pipe->getPreviousFlow()
-					 << ", current flow: " << pipe->getFlow()
-					 << endl;
-					 cout << "Diff of volume (" << cell1->getVolume()
-					 << " - " << cell2->getVolume() << ") : "
-					 << cell1->getVolume() - cell2->getVolume()
-					 << endl;
-					 cout << "hij " << hij << ", hkl " << hkl << endl;*/
+				/*cout << "hij(" << hij << "), hkl(" << hkl
+				 << "), Hij(" << Hij << "), Hkl(" << Hkl
+				 << "), Pij_kl(" << Pij_kl << "), a_ijkl("
+				 << aij_kl << "), Qij_kl(" << Qij_kl << endl;
+				 cout << "Previous Flow: " << pipe->getPreviousFlow()
+				 << ", current flow: " << pipe->getFlow()
+				 << endl;
+				 cout << "Diff of volume (" << cell1->getVolume()
+				 << " - " << cell2->getVolume() << ") : "
+				 << cell1->getVolume() - cell2->getVolume()
+				 << endl;
+				 cout << "hij " << hij << ", hkl " << hkl << endl;*/
 //				}
 			} else {
 				cout << "Outer cell" << endl;
@@ -231,7 +236,8 @@ void FluidSimulation::update(float timeEllapsed) {
 	 * Update Grid
 	 */
 	//cout << "Cell size " << mCells->getWidth() << endl;
-	float max = 0; float min=__INT_MAX__;
+	float max = 0;
+	float min = __INT_MAX__;
 	Cell *cell = 0;
 	for (int i = 0; i < mCells->getWidth(); i++) {
 		for (int j = 0; j < mCells->getHeight(); j++) {
@@ -239,7 +245,6 @@ void FluidSimulation::update(float timeEllapsed) {
 			 * Update particles
 			 */
 			//emitParticles(i, j, timeEllapsed);
-
 			cell = (*mCells)(i, j);
 			max = glm::max(cell->getHeight(mCellLength), max);
 			min = glm::min(cell->getHeight(mCellLength), min);
@@ -279,8 +284,9 @@ void FluidSimulation::update(float timeEllapsed) {
 		}
 	}
 
-	if(mBoundingBox != 0) {
-		mBoundingBox->manualUpdate(glm::vec3(mMinX, min, mMinX), glm::vec3(mMaxX, max, mMaxX));
+	if (mBoundingBox != 0) {
+		mBoundingBox->manualUpdate(glm::vec3(mMinX, min, mMinX),
+				glm::vec3(mMaxX, max, mMaxX));
 	}
 
 	t = clock() - t;
@@ -336,8 +342,8 @@ void FluidSimulation::emitParticles(int i, int j, float timeEllapsed) {
 		else
 			zv = 0 - (*mCells)(i, j)->getVolume();
 		float yv = up;
-		xv = xv/(mCellLength*mCellLength);
-		zv = zv/(mCellLength*mCellLength);
+		xv = xv / (mCellLength * mCellLength);
+		zv = zv / (mCellLength * mCellLength);
 		cout << "Cell(" << i << ", " << j
 				<< ") emmiting particle with velocity: (" << xv << ", " << yv
 				<< "(" << up << ") , " << zv << ")" << endl;
@@ -435,27 +441,26 @@ void FluidSimulation::debugRenderPipes() {
 }
 
 void FluidSimulation::applyForceToControlPoint(int ci, int cj, float force) {
-	float Eij = force/c;
-	if(ci > 0 && cj > 0) {
-		Cell *c1 = (*mCells)(ci-1, cj-1);
-		Cell *c2 = (*mCells)(ci-1, cj);
-		Cell *c3 = (*mCells)(ci, cj-1);
+	float Eij = force / c;
+	if (ci > 0 && cj > 0) {
+		Cell *c1 = (*mCells)(ci - 1, cj - 1);
+		Cell *c2 = (*mCells)(ci - 1, cj);
+		Cell *c3 = (*mCells)(ci, cj - 1);
 		Cell *c4 = (*mCells)(ci, cj);
 		c1->setExternalForce(Eij);
 		c2->setExternalForce(Eij);
 		c3->setExternalForce(Eij);
 		c4->setExternalForce(Eij);
 	} else {
-		cerr << "WARNING: applyForceToControlPoint: Border not handled for now!" << endl;
+		cerr << "WARNING: applyForceToControlPoint: Border not handled for now!"
+				<< endl;
 	}
 }
 
-
-void FluidSimulation::setBoundingBox(BoundingVolume *boundingBox)
-{
-	AABoundingBox *bb=0;
+void FluidSimulation::setBoundingBox(BoundingVolume *boundingBox) {
+	AABoundingBox *bb = 0;
 	bb = dynamic_cast<AABoundingBox *>(boundingBox);
-	if(bb != 0) {
+	if (bb != 0) {
 		cout << "Setting bounding box" << endl;
 		mBoundingBox = bb;
 	} else {
@@ -470,5 +475,34 @@ BoundingVolume* FluidSimulation::getBoundingBox() {
 ContactModel* FluidSimulation::distanceToPhysicsBody(PhysicsBody* physicsBody) {
 	cerr << "Distance from fluid to physics body not implemented" << endl;
 	return 0;
+}
+
+void FluidSimulation::reactToRigidBody(RigidBody* rigidBody) {
+//	static int done = 0;
+//	if (done == 0) {
+		AABoundingBox *boundingBox = 0;
+		boundingBox =
+				dynamic_cast<AABoundingBox *>(rigidBody->getBoundingBox());
+		if (boundingBox == 0) {
+			cerr << "FluidSimulation::reactToRigidBody: only AABBs supported"
+					<< endl;
+			return;
+		}
+
+		vec3 min = boundingBox->getMin();
+		vec3 max = boundingBox->getMax();
+		int minI = min.x / mCellLength;
+		int maxI = max.x / mCellLength;
+		int minJ = min.z / mCellLength;
+		int maxJ = max.z / mCellLength;
+
+		for (int i = minI; i < maxI; i++) {
+			for (int j = minJ; j < maxJ; ++j) {
+				(*mCells)(i, j)->setExternalForce(500);
+			}
+		}
+//		done++;
+//	}
+
 }
 
