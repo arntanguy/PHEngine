@@ -21,6 +21,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 *
  ********************************************************************************/
 
+#include <GL/glew.h>
 #include "Grid.h"
 #include <GL/glut.h>
 #include "OutOfBoundException.h"
@@ -99,6 +100,8 @@ void Grid::generateGrid() {
 		mIndices[j] = i;
 		// Add corresponding vertex for index i
 		mVertices[i] = v;
+		v.texcoords = getTextureCoordinates(x, z);
+		v.normal = vec3(0, 1, 0);
 
 		// Little glue to change row:
 		// Loop current indice (put it twice in the indices array.
@@ -159,7 +162,7 @@ bool Grid::generate() {
 	return true;
 }
 
-bool Grid::render() {
+void Grid::render() {
 	glPushAttrib (GL_ALL_ATTRIB_BITS);
 	// draw the display list
 	//glCallList(mDisplayListIndex);
@@ -168,14 +171,13 @@ bool Grid::render() {
 	glBegin (GL_TRIANGLE_STRIP);
 	for (int i = 0; i < mNumberOfVertices; ++i) {
 		v = mVertices[mIndices[i]];
-		//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, v.texcoords.x, v.texcoords.y);
+		glTexCoord2f(v.texcoords.x, v.texcoords.y);
+		glNormal3f(v.normal.x, v.normal.y, v.normal.z);
 		glVertex3f(v.position.x, v.position.y, v.position.z);
 	}
 	glEnd();
 
 	glPopAttrib();
-
-	return true;
 }
 /**
  * Gets the index in the 1D vertex array
@@ -220,4 +222,47 @@ Vertex Grid::getVertexForCell(int i, int j, VertexPos pos) const throw () {
 void Grid::setVertexForCell(int i, int j, VertexPos pos, Vertex vertex) {
 	int index = getIndex(i, j, pos);
 	mVertices[index] = vertex;
+	mVertices[index].normal = computeNormal(i, j, pos);
+}
+
+glm::vec3 Grid::computeNormal(int i, int j, VertexPos pos) {
+	if (i > 1 && j > 1 && i < mGridSize - 1 && j < mGridSize - 1) {
+		Vertex vertex = mVertices[getIndex(i, j, pos)];
+		glm::vec3 v = vertex.position;
+		int k, l;
+		if (pos == TOP_LEFT) {
+			i = i - 1;
+		} else if (pos == BOTTOM_LEFT) {
+			i = i - 1;
+			j = j + 1;
+		} else if (pos == BOTTOM_RIGHT) {
+			j = j + 1;
+		}
+//			cout << "TOP_RIGHT normal" <<endl;
+		// Top left triangle (top right vertex)
+		glm::vec3 v1 = mVertices[getIndex(i, j, BOTTOM_LEFT)].position;
+		glm::vec3 v2 = mVertices[getIndex(i, j, BOTTOM_RIGHT)].position;
+		glm::vec3 n1 = glm::cross(v1 - v, v2 - v);
+
+		// Bottom right triangle
+		v1 = mVertices[getIndex(i + 1, j, BOTTOM_LEFT)].position;
+		v2 = mVertices[getIndex(i + 1, j, BOTTOM_RIGHT)].position;
+		glm::vec3 n2 = glm::cross(v1 - v, v2 - v);
+
+		// Top left triangle
+		v1 = mVertices[getIndex(i, j - 1, BOTTOM_LEFT)].position;
+		v2 = mVertices[getIndex(i, j - 1, TOP_LEFT)].position;
+		glm::vec3 n3 = glm::cross(v2 - v, v1 - v);
+
+		// Top right triangle
+		v1 = mVertices[getIndex(i + 1, j - 1, TOP_RIGHT)].position;
+		v2 = mVertices[getIndex(i + 1, j - 1, TOP_LEFT)].position;
+		glm::vec3 n4 = glm::cross(v1 - v, v2 - v);
+
+		return glm::normalize((n1 + n2 + n3 + n4) / 4.f);
+	}
+	return vec3(0,1,0);
+}
+glm::vec2 Grid::getGridCoordinates(const glm::vec3& coordinates) const {
+	return vec2(coordinates.x / mCellLength, coordinates.z / mCellLength);
 }

@@ -28,6 +28,7 @@ namespace mt {
     float norm(const glm::vec3&);
     int rand(int min, int max);
 
+    bool pointInTriangle(const glm::vec2& p, const glm::vec2& p0, const glm::vec2& p1, const glm::vec2& p2);
     bool projectPointOnEdge(glm::vec3 e1, glm::vec3 e2, glm::vec3 point, glm::vec3 &projection);
     bool projectOnTriangle(const glm::vec3 &t1, const glm::vec3& t2, const glm::vec3 &t3, const glm::vec3 &normal, const glm::vec3& point, glm::vec3& projection);
     bool onEdge(const glm::vec3 &point, const glm::vec3& e1, const glm::vec3& e2);

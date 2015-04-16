@@ -29,7 +29,7 @@
 
 class ContactModel;
 
-class PhysicsBody {
+class PhysicsBody : public Entity {
 public:
 	enum CollidingType {
 		BROAD_PHASE, NARROW_PHASE, NONE
@@ -53,6 +53,9 @@ public:
 	virtual BoundingVolume *getBoundingBox();
 	virtual void setBoundingBox(BoundingVolume *boundingBox);
 
+	bool generate() {
+		return true;
+	}
 	virtual void update(float) = 0;
 	virtual void render() = 0;
 	virtual ContactModel* distanceToPhysicsBody(

@@ -19,7 +19,7 @@
 #include "mt.h"
 #include "BoundingSphere.h"
 #include <vector>
-#include "MeshData.h"
+#include "CGEngine/MeshData.h"
 #include "RigidBody.h"
 #include <GL/glut.h>
 

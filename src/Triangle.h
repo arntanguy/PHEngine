@@ -19,7 +19,7 @@
 #ifndef __Triangle__
 #define __Triangle__
 
-#include "Entity.h"
+#include "CGEngine/Entity.h"
 #include <glm/glm.hpp>
 #include <GL/gl.h>
 
@@ -35,7 +35,7 @@ class Triangle : public Entity
 
         void setPoints(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3);
 
-        virtual bool render();
+        virtual void render();
         virtual bool generate();
 
         float closestPointOnTriangleToPointVoronoi(const glm::vec3 &point, bool showDebug = true);

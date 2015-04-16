@@ -3,7 +3,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
-#include "AssimpMeshEntity.h"
+#include "CGEngine/AssimpMeshEntity.h"
 #include "BoundingVolume.h"
 #include "AABoundingBox.h"
 #include "PhysicsBody.h"

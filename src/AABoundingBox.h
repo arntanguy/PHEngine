@@ -20,7 +20,7 @@
 #define __AABoundingBox__
 
 #include "BoundingVolume.h"
-#include "ParallelogramEntity.h"
+#include "CGEngine/ParallelogramEntity.h"
 #include <glm/glm.hpp>
 
 class PhysicsBody;

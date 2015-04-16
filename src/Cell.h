@@ -28,7 +28,7 @@ public:
 	float mVolume;
 	float mPreviousVolume;
 	float mExternalForce;
-
+	bool done;
 public:
 	Cell();
 	virtual ~Cell();

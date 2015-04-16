@@ -19,7 +19,7 @@
 #ifndef __BoundingVolume__
 #define __BoundingVolume__
 
-#include "Entity.h"
+#include "CGEngine/Entity.h"
 #include <glm/glm.hpp>
 
 class MeshData;

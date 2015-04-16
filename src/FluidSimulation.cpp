@@ -26,10 +26,11 @@
 #include "FluidSimulation.h"
 #include <glm/glm.hpp>
 #include <iostream>
-#include "DrawingTools.h"
+#include "CGEngine/DrawingTools.h"
 #include "AABoundingBox.h"
 #include <omp.h>
 #include <time.h>
+#include "mt.h"
 
 using namespace std;
 using namespace glm;
@@ -62,14 +63,16 @@ FluidSimulation::FluidSimulation(int gridSize, float gridLength,
 			(*mCells)(i, j)->setVolume(5000);
 		}
 	}
-	//(*mCells)(50, 50)->setVolume(10000);
-	/*	(*mCells)(0, 0)->setVolume(10000);
-	 (*mCells)(99, 99)->setVolume(10000);
-	 (*mCells)(99, 0)->setVolume(10000);
-	 (*mCells)(0, 99)->setVolume(10000);
-	 (*mCells)(50, 50)->setExternalForce(50000); */
 
-	// Fluid density
+//	(*mCells)(0,0)->setVolume(000);
+//   (*mCells)(50, 50)->setVolume(10000);
+//   (*mCells)(0, 0)->setVolume(10000);
+//	 (*mCells)(99, 99)->setVolume(10000);
+//	 (*mCells)(99, 0)->setVolume(10000);
+//	 (*mCells)(0, 99)->setVolume(10000);
+//	 (*mCells)(50, 50)->setExternalForce(50000);
+
+// Fluid density
 	p = 1; // water
 	// Atmospheric pressure in the system (in Pa)
 	p0 = 101325;
@@ -137,7 +140,7 @@ void FluidSimulation::generatePipes() {
  * 	Timestep for the update
  */
 void FluidSimulation::update(float timeEllapsed) {
-	timeEllapsed = 0.1;
+	timeEllapsed = timeEllapsed / 10;
 
 	clock_t t = clock();
 
@@ -172,6 +175,9 @@ void FluidSimulation::update(float timeEllapsed) {
 				float Hkl = hkl * p * g + p0;
 				float Eij = cell1->getExternalForce();
 				float Ekl = cell2->getExternalForce();
+				if (Eij != 0) {
+					cout << "Eij(" << Eij << "), Ekl(" << Ekl << ")" << endl;
+				}
 				float aij_kl = (p * g * (hij - hkl) + (Eij - Ekl))
 						/ (p * pipeLength);
 				float Qij_kl = timeEllapsed * (c * aij_kl);
@@ -246,6 +252,7 @@ void FluidSimulation::update(float timeEllapsed) {
 			 */
 			//emitParticles(i, j, timeEllapsed);
 			cell = (*mCells)(i, j);
+			// For the AABB
 			max = glm::max(cell->getHeight(mCellLength), max);
 			min = glm::min(cell->getHeight(mCellLength), min);
 
@@ -378,14 +385,18 @@ float FluidSimulation::getInterpolatedHeight(int x, int y, int x1, int y1,
 }
 
 void FluidSimulation::render() {
-	/*for (int i = 0; i < mGridSize; i++) {
-	 for (int j = 0; j < mGridSize; j++) {
-	 debugRenderCell(i, j);
-	 }
-	 }*/
+	if(hasShader())
+		mShader->enable();
+//	for (int i = 0; i < mGridSize; i++) {
+//	 for (int j = 0; j < mGridSize; j++) {
+//	 debugRenderCell(i, j);
+//	 }
+//	 }
 
 	mGrid->render();
 	//debugRenderPipes();
+	if(hasShader())
+		mShader->disable();
 }
 
 /**
@@ -480,29 +491,102 @@ ContactModel* FluidSimulation::distanceToPhysicsBody(PhysicsBody* physicsBody) {
 void FluidSimulation::reactToRigidBody(RigidBody* rigidBody) {
 //	static int done = 0;
 //	if (done == 0) {
-		AABoundingBox *boundingBox = 0;
-		boundingBox =
-				dynamic_cast<AABoundingBox *>(rigidBody->getBoundingBox());
-		if (boundingBox == 0) {
-			cerr << "FluidSimulation::reactToRigidBody: only AABBs supported"
-					<< endl;
-			return;
-		}
+	AABoundingBox *boundingBox = 0;
+	boundingBox = dynamic_cast<AABoundingBox *>(rigidBody->getBoundingBox());
+	if (boundingBox == 0) {
+		cerr << "FluidSimulation::reactToRigidBody: only AABBs supported"
+				<< endl;
+		return;
+	}
 
-		vec3 min = boundingBox->getMin();
-		vec3 max = boundingBox->getMax();
-		int minI = min.x / mCellLength;
-		int maxI = max.x / mCellLength;
-		int minJ = min.z / mCellLength;
-		int maxJ = max.z / mCellLength;
+	vec3 min = boundingBox->getMin();
+	vec3 max = boundingBox->getMax();
+	int minI = min.x / mCellLength;
+	int maxI = max.x / mCellLength;
+	int minJ = min.z / mCellLength + 1;
+	int maxJ = max.z / mCellLength + 1;
 
-		for (int i = minI; i < maxI; i++) {
-			for (int j = minJ; j < maxJ; ++j) {
-				(*mCells)(i, j)->setExternalForce(500);
+	/**
+	 * Just with bounding box
+	 */
+//	for (int i = 0; i < mGridSize; i++) {
+//		for (int j = 0; j < mGridSize; ++j) {
+//			//applyForceToControlPoint(i, j, 6000);
+//			(*mCells)(i, j)->setExternalForce(800);
+//			// debugRenderCell(i, j);
+//		}
+//	}
+	MeshData* data = rigidBody->getTransformedMeshData();
+	glm::vec3 vertexPos;
+	glm::vec3 gridControlPos;
+	float distance = 0;
+	glm::vec3 p1, p2, p3;
+	glm::vec2 g1, g2, g3;
+	float minX = 0, minZ = 0;
+	float maxX = 0, maxZ = 0;
+	// For each potential grid point
+	for (int i = minI; i < maxI + 1; i++) {
+		for (int j = minJ; j < maxJ + 1; j++) {
+			Cell *c = 0;
+			if (i >= 0 && j >= 0 && i < mGridSize && j < mGridSize) {
+				c = (*mCells)(i, j);
+			} else {
+				continue;
+				c = 0;
+			}
+			if (c != 0) {
+				gridControlPos = glm::vec3(i * mCellLength,
+						c->getHeight(mCellLength), j * mCellLength);
+			} else {
+				gridControlPos = glm::vec3(i * mCellLength, 0, j * mCellLength);
+				//cerr << "error " << i << ", " << j << endl;
+			}
+
+			// For each vertex
+			for (int k = 0; k < data->mVertices.size() / 3; k++) {
+				// Object triangle vertices
+				p1 = data->mVertices[k * 3];
+				p2 = data->mVertices[k * 3 + 1];
+				p3 = data->mVertices[k * 3 + 2];
+				minX = glm::min(p1.x, glm::min(p2.x, p3.x));
+				maxX = glm::max(p1.x, glm::max(p2.x, p3.x));
+				minZ = glm::min(p1.z, glm::min(p2.z, p3.z));
+				maxZ = glm::min(p1.z, glm::max(p2.z, p3.z));
+				vec3 n = normalize(cross(p2 - p1, p3 - p1));
+				glm::vec3 color(0.1 + (100 * k % 255) / 255.f,
+						0.1 + (100 * k % 255) / 255.f,
+						0.1 + (100 * (k) % 255) / 255.f);
+//				glBegin(GL_TRIANGLES);
+//				glColor3f(color.x, color.y, color.z);
+//				glVertex3f(p1.x, p1.y, p1.z);
+//				glVertex3f(p2.x, p2.y, p2.z);
+//				glVertex3f(p3.x, p3.y, p3.z);
+//
+//				glEnd();
+//				dt::drawLine(p1, p2, glm::vec3(0,0,1), 10, 10, color);
+//				dt::drawLine(p2, p3, glm::vec3(0,0,1), 10, 10, color);
+//				dt::drawLine(p3, p1, glm::vec3(0,0,1), 10, 10, color);
+
+				vec3 projection;
+				if (mt::pointInTriangle(
+						vec2(gridControlPos.x, gridControlPos.z),
+						vec2(p1.x, p1.z), vec2(p2.x, p2.z), vec2(p3.x, p3.z))) {
+					if (mt::projectOnTriangle(p1, p2, p3, n, gridControlPos,
+							projection)) {
+//					//cout << "control point in triangle at distance " << mt::norm(gridControlPos-projection) << endl;
+						if (mt::norm(gridControlPos - projection) < 10) {
+							//applyForceToControlPoint(i, j, 50000);
+							(*mCells)(i, j)->setExternalForce(pow(rigidBody->getLinearVelocity().y,2)*200);
+//							dt::drawPoint(gridControlPos, 10);
+//							dt::drawLine(projection, gridControlPos,
+//									glm::vec3(0, 0, 1), 1, 1, vec3(0, 1, 0));
+						}
+
+					}
+				}
 			}
 		}
+	}
+
 //		done++;
-//	}
-
 }
-

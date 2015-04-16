@@ -18,6 +18,7 @@
 
 #include "mt.h"
 #include <ctime>
+#include <cstdlib>
 
 namespace mt {
     /**
@@ -86,6 +87,13 @@ namespace mt {
         glm::vec3 n3 = glm::normalize(glm::cross(a-c, p-c));
 
         return ((glm::dot(n1, n2) > 0.99)  && (glm::dot(n2,n3) > 0.99));
+    }
+
+    bool pointInTriangle(const glm::vec2& p, const glm::vec2& p0, const glm::vec2& p1, const glm::vec2& p2) {
+    	float Area = 1.f/2.f*(-p1.y*p2.x + p0.y*(-p1.x + p2.x) + p0.x*(p1.y - p2.y) + p1.x*p2.y);
+    	float s = 1/(2*Area)*(p0.y*p2.x - p0.x*p2.y + (p2.y - p0.y)*p.x + (p0.x - p2.x)*p.y);
+    	float t = 1/(2*Area)*(p0.x*p1.y - p0.y*p1.x + (p0.y - p1.y)*p.x + (p1.x - p0.x)*p.y);
+    	return s>0 && t > 0 && 1-s-t > 0;
     }
 
     /**

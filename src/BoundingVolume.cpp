@@ -17,7 +17,7 @@
  ******************************************************************************/
 
 #include "BoundingVolume.h"
-#include "MeshData.h"
+#include "CGEngine/MeshData.h"
 #include "BoundingVolume.h"
 #include "RigidBody.h"
 

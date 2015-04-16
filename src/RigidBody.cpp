@@ -17,13 +17,13 @@
  ******************************************************************************/
 
 #include "RigidBody.h"
-#include "Entity.h"
+#include "CGEngine/Entity.h"
 #include <GL/gl.h>
-#include "Debug.h"
+#include "CGEngine/Debug.h"
 #include "AABoundingBox.h"
 #include <glm/ext.hpp>
 #include "mt.h"
-#include "DrawingTools.h"
+#include "CGEngine/DrawingTools.h"
 #include <limits.h> // For max size of numbers
 #include "Triangle.h"
 #include <omp.h>
@@ -83,7 +83,7 @@ void RigidBody::update(float ellapsedTime)
     mTransformation = mat4(1.f);
 
     // Transformation = rotation followed by translation
-    mTransformation *= glm::translate(mPosition.x, mPosition.y, mPosition.z) * mRotation ;
+    mTransformation *= glm::translate(glm::vec3(mPosition.x, mPosition.y, mPosition.z)) * mRotation ;
 
     if(mInvMass != 0) {
         mLinearMomentum.y -= ellapsedTime * 0.001f*mInvMass;
@@ -203,7 +203,7 @@ MeshData* RigidBody::getTransformedMeshData() const
 {
     MeshData *tMesh = new MeshData();
     for (int i = 0; i < mMeshData->mVertices.size(); i++) {
-        vec4 transformedV = mTransformation * glm::scale(mScaleFactorX, mScaleFactorY, mScaleFactorZ) * vec4(mMeshData->mVertices.at(i),1.f);
+        vec4 transformedV = mTransformation * glm::scale(glm::vec3(mScaleFactorX, mScaleFactorY, mScaleFactorZ)) * vec4(mMeshData->mVertices.at(i),1.f);
         tMesh->mVertices.push_back(vec3(transformedV));
         if(i < mMeshData->mNormals.size()) {
             vec4 transformedN = mTransformation * vec4(mMeshData->mNormals.at(i),1.f);

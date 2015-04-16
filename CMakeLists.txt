@@ -4,7 +4,7 @@ SET(DOC_DIR "doc")
 SET(SRC_DIR src)
 SET(INCLUDE_DIR .)
 SET(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules /usr/local/cmake)
 set(LIB_TYPE SHARED) # STATIC or SHARED
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
@@ -23,11 +23,13 @@ find_package(ASSIMP REQUIRED)
 find_package(CGEngine REQUIRED)
 find_package(OpenMP REQUIRED)
 
-set (CMAKE_CXX_FLAGS "-std=gnu++0x ${OpenMP_CXX_FLAGS}")
+set (CMAKE_CXX_FLAGS "-std=c++11 ${OpenMP_CXX_FLAGS}")
 
 
 # Set all debug and info messages on
 add_definitions(-DDEBUG=1 -DINFO=1)
+add_definitions(-DGLM_FORCE_RADIANS)
+add_definitions(-std=c++11)
 
 ### DEFINE NEEDED SOURCES
 SET(SOURCES
@@ -55,7 +57,19 @@ include_directories (${SRC_DIR} ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ${ASSI
 add_library(${PROJECT_NAME} ${LIB_TYPE} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLUT_LIBRARIES} ${SFML_LIBRARIES} ${ASSIMP_LIBRARIES} ${CGENGINE_LIBRARIES} ${OPENMP_LIBRARIES})
 
+#################################
+# INSTALL
+################################
 
+set(INSTALL_LIB_DIR /usr/local/lib CACHE PATH "Installation directory for libraries")
+set(INSTALL_BIN_DIR /usr/local/bin CACHE PATH "Installation directory for executables")
+set(INSTALL_INCLUDE_DIR /usr/local/include/${PROJECT_NAME} CACHE PATH "Installation directory for includes")
+
+set(INSTALL_CMAKE_DIR /usr/local/cmake)
+install (TARGETS ${PROJECT_NAME} DESTINATION ${INSTALL_LIB_DIR})
+install (DIRECTORY "${SRC_DIR}/" DESTINATION ${INSTALL_INCLUDE_DIR})
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/Find${PROJECT_NAME}.cmake DESTINATION ${INSTALL_CMAKE_DIR})
+ 
 
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen)

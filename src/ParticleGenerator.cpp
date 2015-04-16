@@ -22,7 +22,7 @@
  **/
 
 #include "ParticleGenerator.h"
-#include "PlaneEntity.h"
+#include "CGEngine/PlaneEntity.h"
 #include <glm/gtx/norm.hpp>
 
 #define THRESHOLD_DISTANCE 0.2

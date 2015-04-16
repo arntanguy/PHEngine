@@ -18,10 +18,10 @@
 
 
 #include "Triangle.h"
-#include "Debug.h"
+#include "CGEngine/Debug.h"
 #include <GL/glut.h>
 #include "mt.h"
-#include "DrawingTools.h"
+#include "CGEngine/DrawingTools.h"
 
 Triangle::Triangle (const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3)
 {
@@ -41,14 +41,13 @@ void Triangle::setPoints(const glm::vec3& p1, const glm::vec3& p2, const glm::ve
     mNormal = glm::normalize(glm::cross(p2-p1, p3-p1));
 }
 
-bool Triangle::render()
+void Triangle::render()
 {
     glBegin(GL_TRIANGLES);
         glVertex3f(mPoints[0].x, mPoints[0].y, mPoints[0].z);
         glVertex3f(mPoints[1].x, mPoints[1].y, mPoints[1].z);
         glVertex3f(mPoints[2].x, mPoints[2].y, mPoints[2].z);
     glEnd();
-    return true;
 }
 
 bool Triangle::generate()

@@ -41,6 +41,7 @@ PhysicsBody::PhysicsBody(BoundingVolume *boundingVolume) {
 void PhysicsBody::init() {
 	 id = id_counter++;
 	 cerr << "Init("<<id<<")"<<endl;
+	 mCollide = NONE;
 }
 
 PhysicsBody::~PhysicsBody() {

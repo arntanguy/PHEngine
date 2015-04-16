@@ -24,7 +24,7 @@
 #ifndef CELLGRID_H_
 #define CELLGRID_H_
 
-#include "Entity.h"
+#include "CGEngine/Entity.h"
 #include "Cell.h"
 #include "Array2D.h"
 #include "Pipe.h"

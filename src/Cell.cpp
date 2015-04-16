@@ -29,13 +29,14 @@ Cell::Cell() {
 	mVolume = 0;
 	mPreviousVolume = 0;
 	mExternalForce = 0;
+	done = false;
 }
 
 Cell::~Cell() {
 }
 
 void Cell::updateVolume(float amount) {
-	setVolume(mVolume+amount);
+	setVolume(mVolume + amount);
 }
 
 void Cell::setVolume(float volume) {
@@ -50,11 +51,11 @@ float Cell::getVolume() const {
 }
 
 float Cell::getHeight(float dx) const {
-	return mVolume/(dx*dx);
+	return mVolume / (dx * dx);
 }
 
 float Cell::upwardsVelocity(float dx) const {
-	return (mVolume-mPreviousVolume)/(dx*dx);
+	return (mVolume - mPreviousVolume) / (dx * dx);
 }
 
 void Cell::printDebug() const {
@@ -62,7 +63,12 @@ void Cell::printDebug() const {
 }
 
 void Cell::setExternalForce(float force) {
-	mExternalForce = force;
+	//cout << "Set external force... "<<force << endl;
+//	if (!done) {
+//		cout << "Set external force " << force << endl;
+		mExternalForce = force;
+//		done = true;
+//	}
 }
 
 /**

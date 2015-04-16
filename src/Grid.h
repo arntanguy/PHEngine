@@ -26,7 +26,7 @@
 
 #include <glm/glm.hpp>
 #include <GL/gl.h>
-#include "Entity.h"
+#include "CGEngine/Entity.h"
 #include "Vertex.h"
 
 /**
@@ -52,6 +52,7 @@ protected:
 
 	glm::vec2 getTextureCoordinates(float, float) const;
 	int getIndex(int i, int j, VertexPos pos) const;
+	glm::vec3 computeNormal(int i, int j, VertexPos pos);
 
 public:
 	Grid(int gridSize, float gridLength);
@@ -61,10 +62,12 @@ public:
 	void generateVerticesDisplayList();
 
 	bool generate();
-	bool render();
+	void render();
 
 	Vertex getVertexForCell(int i, int j, VertexPos pos) const throw();
 	void setVertexForCell(int i, int j, VertexPos pos, Vertex vertex);
+
+	glm::vec2 getGridCoordinates(const glm::vec3 &coordinates) const;
 };
 
 #endif /* GRID_H_ */
