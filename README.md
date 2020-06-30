@@ -12,3 +12,7 @@ You can see a video of its features on youtube
 - Fluid simulation: https://youtu.be/QpWvTUoLKQo
 
 [![PHEngine demonstration video](http://img.youtube.com/vi/QpWvTUoLKQo/0.jpg)](https://youtu.be/QpWvTUoLKQo "PHEngine fluid simulation")
+
+- Minimal distance between meshes: https://youtu.be/VKyLUUR_nz4
+
+[![PHEngine minimal mesh distance video](http://img.youtube.com/vi/VKyLUUR_nz4/0.jpg)](https://youtu.be/VKyLUUR_nz4 "PHEngine minimal mesh distance video")
